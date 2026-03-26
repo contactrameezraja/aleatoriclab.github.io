@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aleatoric Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #222;
+    background: #fff;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  .hook {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #111;
+    margin-bottom: 10px;
+  }
+
+  .hook-sub {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 36px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    margin-top: 8px;
+  }
+
+  p { margin-bottom: 16px; color: #333; }
+
+  strong { font-weight: 500; color: #111; }
+  em { font-style: italic; }
+
+  .keywords {
+    margin: 24px 0;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .keywords span::after { content: ' ·'; color: #bbb; }
+  .keywords span:last-child::after { content: ''; }
+  .keywords span { margin-right: 4px; }
+
+  hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 32px 0;
+  }
+
+  h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: #111;
+  }
+
+  .news-item {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .news-date { color: #999; }
+  .news-text { color: #444; }
+  .news-text a { color: #0066cc; text-decoration: none; }
+  .news-text a:hover { text-decoration: underline; }
+
+  .links {
+    margin-top: 8px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .links a {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .links a:hover { text-decoration: underline; }
+
+  .research-areas {
+    font-size: 14px;
+    color: #444;
+    list-style: none;
+    padding: 0;
+  }
+
+  .research-areas li {
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .research-areas li:last-child { border-bottom: none; }
+
+  .research-areas li span {
+    font-weight: 500;
+    color: #111;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  #walk {
+    display: block;
+    margin: 0 auto;
+    width: 320px;
+    height: 320px;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .hero h1 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #111;
+    margin-bottom: 4px;
+    margin-top: 16px;
+  }
+
+  .hero p {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<p class="hook">Let me show you where prediction ends<br>and understanding begins.</p>
+<p class="hook-sub">Building probabilistic systems for the problems where overconfidence has real consequences.</p>
+
+<div class="hero">
+  <canvas id="walk" width="640" height="640"></canvas>
+  <h1>Aleatoric Lab</h1>
+  <p>Principled probabilistic machine learning</p>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('walk');
+  const dpr = window.devicePixelRatio || 1;
+  const W = 320, H = 320;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  let seed = 42;
+  function rand() {
+    seed = (seed * 16807) % 2147483647;
+    return (seed - 1) / 2147483646;
+  }
+  function randn() {
+    let u = 0, v = 0;
+    while (!u) u = rand();
+    while (!v) v = rand();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Origin at centre — paths radiate outward in all directions
+  const ox = W / 2, oy = H / 2;
+  const steps = 110;
+  const numPaths = 160;
+
+  const paths = [];
+  for (let p = 0; p < numPaths; p++) {
+    seed = 42 + p * 137;
+    // Split into left-going and right-going paths
+    const goRight = p % 2 === 0;
+    const baseAngle = goRight ? 0 : Math.PI;
+    // Spread across a wide arc on each side
+    const spread = (Math.PI * 0.85);
+    const angle = baseAngle + (rand() - 0.5) * spread;
+    let x = ox, y = oy;
+    const pts = [[x, y]];
+    for (let s = 0; s < steps; s++) {
+      // More noise relative to drift = wider organic spread
+      x += Math.cos(angle) * 0.65 + randn() * 1.6;
+      y += Math.sin(angle) * 0.65 + randn() * 1.6;
+      pts.push([x, y]);
+    }
+    const pick = rand();
+    let hue, sat, lit;
+    if (pick < 0.55) { hue = 220 + randn() * 20; sat = 15 + rand() * 20; lit = 18 + rand() * 25; }
+    else if (pick < 0.85) { hue = 200 + randn() * 15; sat = 10 + rand() * 15; lit = 25 + rand() * 20; }
+    else { hue = 30 + randn() * 10; sat = 8 + rand() * 12; lit = 30 + rand() * 20; }
+    const alpha = 0.06 + rand() * 0.10;
+    const lw = 0.7 + rand() * 0.9;
+    paths.push({ pts, hue, sat, lit, alpha, lw });
+  }
+
+  let startTime = null;
+  const duration = 3200;
+
+  function ease(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  function draw(ts) {
+    if (!startTime) startTime = ts;
+    const raw = Math.min((ts - startTime) / duration, 1);
+    const t = ease(raw);
+    const drawSteps = Math.floor(t * steps);
+
+    ctx.clearRect(0, 0, W, H);
+
+    for (const { pts, hue, sat, lit, alpha, lw } of paths) {
+      if (drawSteps < 1) continue;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let s = 1; s <= drawSteps && s < pts.length; s++) {
+        ctx.lineTo(pts[s][0], pts[s][1]);
+      }
+      ctx.strokeStyle = `hsla(${hue},${sat}%,${lit}%,${alpha})`;
+      ctx.lineWidth = lw;
+      ctx.stroke();
+    }
+
+    // Centre glow
+    const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, 20);
+    g.addColorStop(0, `rgba(20,30,70,${0.12 * t})`);
+    g.addColorStop(1, 'rgba(20,30,70,0)');
+    ctx.beginPath();
+    ctx.arc(ox, oy, 20, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // Centre dot
+    ctx.beginPath();
+    ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(20,30,70,${0.3 + t * 0.55})`;
+    ctx.fill();
+
+    if (raw < 1) requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+})();
+</script>
+
+<p>
+  Aleatoric Lab was created by Rameez Raja out of a fascination with finding structure in places that resist it, and finding honesty in systems that are usually rewarded for projecting confidence they do not have. What drives the work here is a particular kind of curiosity: the belief that understanding something properly means being willing to say exactly how much you do not know, and that the most useful models are not the ones that give you an answer but the ones that tell you how much to trust it.
+</p>
+
+<p>
+  The name comes from the Latin <em>alea</em>, meaning the roll of a die, and it refers specifically to <strong>aleatoric uncertainty</strong>, which is the irreducible randomness that lives inside every complex system regardless of how much data you collect or how sophisticated your methods become. What makes this idea compelling is that it does not belong to any single domain. It lives equally inside the decisions a hospital makes under resource pressure, inside a supply chain absorbing a geopolitical shock, inside a financial model being stress-tested against scenarios that have never happened before, and inside social systems trying to serve populations whose needs cannot be fully anticipated. The mathematics of irreducible uncertainty transfers across all of them, and what changes is only the domain knowledge you bring to bear on it.
+</p>
+
+<p>
+  At Aleatoric Lab we build <strong>probabilistic ML and Bayesian systems</strong> that take this seriously, developing methods and tools for the domains where being honest about uncertainty is not a methodological nicety but an operational necessity. Because a model that knows its own limits is not a weaker model, it is a more trustworthy one, and in high-stakes environments that distinction is everything.
+</p>
+
+<div class="keywords">
+  <span>Bayesian Inference</span>
+  <span>Uncertainty Quantification</span>
+  <span>Gaussian Processes</span>
+  <span>Epistemic Reasoning</span>
+  <span>Probabilistic ML</span>
+  <span>Statistical Learning</span>
+  <span>Neurosymbolic AI</span>
+</div>
+
+<p style="font-size:14px; color:#888; font-style:italic;">This site is currently live and more updates will follow along.</p>
+
+<hr>
+
+<h2>Research Interests</h2>
+<ul class="research-areas">
+  <li><span>Epistemic Reasoning</span>Neurosymbolic methods for reasoning about belief and knowledge in multi-agent and adversarial environments.</li>
+  <li><span>Supply Chain Resilience</span>Predictive modelling of manufacturing location decisions and disruption under geopolitical risk.</li>
+  <li><span>Health &amp; Social Systems</span>Probabilistic ML for healthcare resource allocation, clinical decision support, and sociotechnical uncertainty.</li>
+  <li><span>Financial Systems</span>Bayesian approaches to risk, stress-testing, and decision-making in regulated environments.</li>
+  <li><span>Misinformation &amp; Social Media</span>Modelling the spread and detection of misinformation across networks, with uncertainty quantification over source credibility and information reliability.</li>
+  <li><span>Policy &amp; Governance</span>Probabilistic frameworks for evidence-based policy design, regulatory decision-making under uncertainty, and AI governance.</li>
+  <li><span>Disaster Risk &amp; Resilience</span>Bayesian and spatiotemporal ML for disaster prediction, vulnerability modelling, and resource allocation in emergency response.</li>
+  <li><span>Multi-Agent Systems</span>Learning and reasoning in environments where multiple agents hold private, incomplete, or conflicting information.</li>
+</ul>
+
+<hr>
+
+<h2>News</h2>
+<div class="news-item">
+  <span class="news-date">Mar 2026</span>
+  <span class="news-text">Abstract accepted for <strong>oral presentation</strong> at <strong>Synergy for Science 2026</strong>, Ethics and Innovation Forum, Scottish Event Campus, Glasgow, July 2026. Title: <em>Toward an open toolkit for interpretable machine learning: co-designing explainability with researchers across disciplines.</em></span>
+</div>
+<div class="news-item">
+  <span class="news-date">Mar 2026</span>
+  <span class="news-text">Aleatoric Lab founded at <a href="http://aleatoriclab.com">aleatoriclab.com</a></span>
+</div>
+
+<hr>
+
+<p style="font-size:13px; color:#999;">Aleatoric Lab &nbsp;·&nbsp; aleatoriclab.com &nbsp;·&nbsp; Est. 2026</p>
+
+</body>
+</html>
