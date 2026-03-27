@@ -41,20 +41,31 @@
     margin-top: 8px;
   }
 
-  p { margin-bottom: 16px; color: #333; }
+  p { margin-bottom: 16px; color: #333; text-align: justify; }
 
   strong { font-weight: 500; color: #111; }
   em { font-style: italic; }
 
   .keywords {
-    margin: 24px 0;
-    font-size: 14px;
-    color: #555;
+    margin: 28px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .keywords span::after { content: ' ·'; color: #bbb; }
-  .keywords span:last-child::after { content: ''; }
-  .keywords span { margin-right: 4px; }
+  .keywords span {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    background: #1e2850;
+    color: #e8e6f8;
+    border: 1px solid #2e3a6e;
+  }
+
+  .keywords span::after { content: ''; }
 
   hr {
     border: none;
@@ -284,13 +295,13 @@
   <span>Neurosymbolic AI</span>
 </div>
 
-<p style="font-size:14px; color:#888; font-style:italic;">This site is currently live and more updates will follow along.</p>
+
 
 <hr>
 
 <h2>Research Interests</h2>
 
-<p>What connects these areas is not the domain but the problem structure. A Gaussian process modelling flood risk and one modelling misinformation credibility are solving the same mathematical problem. Multi-agent systems for supply chains and multi-agent systems for adversarial reasoning share the same core challenge. The mathematics of uncertainty does not respect disciplinary boundaries, and the research at Aleatoric Lab is built around that idea.</p>
+<p>Machine learning is at its most powerful not when it memorises patterns but when it generalises, when the same underlying structure surfaces across problems that look nothing like each other on the surface. The strength of probabilistic methods in particular lies in exactly this kind of transfer: the mathematics does not care whether you are modelling a hospital, a supply chain, or a social network. What connects the research areas below is not the domain but the problem structure. A Gaussian process modelling flood risk and one modelling misinformation credibility are solving the same mathematical problem. Multi-agent systems for supply chains and multi-agent systems for adversarial reasoning share the same core challenge. The mathematics of uncertainty does not respect disciplinary boundaries, and the research at Aleatoric Lab is built around that idea.</p>
 
 <canvas id="netcanvas" style="width:100%;display:block;margin:24px 0;"></canvas>
 <script>
@@ -434,6 +445,10 @@ requestAnimationFrame(draw);
 </div>
 
 <hr>
+
+<div style="border:1px solid #e0dff8;border-left:3px solid #1e2850;border-radius:6px;padding:14px 18px;background:#f7f6fe;font-size:13px;color:#444;margin-bottom:32px;">
+  This site is currently live and more updates will follow soon. For any queries or information reach out to <a href="mailto:rameezis@aleatoriclab.com" style="color:#1e2850;">rameezis@aleatoriclab.com</a>
+</div>
 
 <p style="font-size:13px; color:#999;">Aleatoric Lab &nbsp;·&nbsp; aleatoriclab.com &nbsp;·&nbsp; Est. 2026</p>
 
