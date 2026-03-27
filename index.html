@@ -121,8 +121,9 @@
   #walk {
     display: block;
     margin: 0 auto;
-    width: 320px;
-    height: 320px;
+    width: 560px;
+    height: 560px;
+    max-width: 100%;
   }
 
   .hero {
@@ -162,7 +163,7 @@
 (function() {
   const canvas = document.getElementById('walk');
   const dpr = window.devicePixelRatio || 1;
-  const W = 320, H = 320;
+  const W = 560, H = 560;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
@@ -182,8 +183,8 @@
 
   // Origin at centre — paths radiate outward in all directions
   const ox = W / 2, oy = H / 2;
-  const steps = 110;
-  const numPaths = 160;
+  const steps = 160;
+  const numPaths = 220;
 
   const paths = [];
   for (let p = 0; p < numPaths; p++) {
@@ -192,14 +193,14 @@
     const goRight = p % 2 === 0;
     const baseAngle = goRight ? 0 : Math.PI;
     // Spread across a wide arc on each side
-    const spread = (Math.PI * 0.85);
+    const spread = (Math.PI * 1.1);
     const angle = baseAngle + (rand() - 0.5) * spread;
     let x = ox, y = oy;
     const pts = [[x, y]];
     for (let s = 0; s < steps; s++) {
       // More noise relative to drift = wider organic spread
-      x += Math.cos(angle) * 0.65 + randn() * 1.6;
-      y += Math.sin(angle) * 0.65 + randn() * 1.6;
+      x += Math.cos(angle) * 1.1 + randn() * 2.8;
+      y += Math.sin(angle) * 1.1 + randn() * 2.8;
       pts.push([x, y]);
     }
     const pick = rand();
