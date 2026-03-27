@@ -393,7 +393,7 @@ function draw(ts){
       const al=clamp((1-d/240)*0.55,0,0.55);ctx.beginPath();ctx.moveTo(na.x,na.y);ctx.lineTo(nb.x,nb.y);ctx.strokeStyle=`rgba(127,119,221,${al})`;ctx.lineWidth=0.6;ctx.stroke();
     });
     ALL.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.named?COL[n.col].stroke:(dark?'#555':'#bbb');ctx.globalAlpha=n.named?0.9:0.5;ctx.fill();ctx.globalAlpha=1;});
-    if(elapsed>3.5){phase=1;phaseStart=ts;}
+    if(elapsed>40){phase=1;phaseStart=ts;}
 
   } else if(phase===1){
     const pt=clamp((ts-phaseStart)/2200,0,1);const et=ease(pt);
