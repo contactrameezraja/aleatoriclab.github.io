@@ -1,453 +1,1575 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aleatoric Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: #222;
-    background: #fff;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 60px 24px 80px;
+  html, body {
+    background: #000;
+    color: rgba(255,255,255,0.9);
+    font-family: 'JetBrains Mono', monospace;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    height: 100%;
   }
 
-  .hook {
-    font-size: 18px;
-    font-weight: 500;
-    line-height: 1.4;
-    color: #111;
-    margin-bottom: 10px;
-    text-align: left;
+  #density { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  #gl      { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+  #strands { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; pointer-events: none; }
+
+  .grain {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 
-  .hook-sub {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 36px;
-    text-align: left;
-  }
+  .ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  .ui > * { pointer-events: auto; }
 
-  h1 {
-    font-size: 26px;
-    font-weight: 500;
-    margin-bottom: 20px;
-    margin-top: 8px;
-  }
-
-  p { margin-bottom: 16px; color: #333; text-align: justify; }
-
-  strong { font-weight: 500; color: #111; }
-  em { font-style: italic; }
-
-  .keywords {
-    margin: 28px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .keywords span {
-    display: inline-block;
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    background: #1e2850;
-    color: #e8e6f8;
-    border: 1px solid #2e3a6e;
-  }
-
-  .keywords span::after { content: ''; }
-
-  hr {
-    border: none;
-    border-top: 1px solid #eee;
-    margin: 32px 0;
-  }
-
-  h2 {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 16px;
-    color: #111;
-  }
-
-  .news-item {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 12px;
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
-
-  .news-date { color: #999; }
-  .news-text { color: #444; }
-  .news-text a { color: #0066cc; text-decoration: none; }
-  .news-text a:hover { text-decoration: underline; }
-
-  .links {
-    margin-top: 8px;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .links a {
-    color: #0066cc;
-    text-decoration: none;
-    font-size: 14px;
-  }
-
-  .links a:hover { text-decoration: underline; }
-
-  .research-areas {
-    font-size: 14px;
-    color: #444;
-    list-style: none;
-    padding: 0;
-  }
-
-  .research-areas li {
-    padding: 6px 0;
-    border-bottom: 1px solid #f0f0f0;
-  }
-
-  .research-areas li:last-child { border-bottom: none; }
-
-  .research-areas li span {
-    font-weight: 500;
-    color: #111;
-    display: block;
-    margin-bottom: 2px;
-  }
-
-  #walk {
-    display: block;
-    margin: 0 auto;
-    width: 560px;
-    height: 560px;
-    max-width: 100%;
-  }
-
-  .hero {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-
-  .hero h1 {
-    font-size: 20px;
-    font-weight: 500;
-    color: #111;
-    margin-bottom: 4px;
-    margin-top: 16px;
-  }
-
-  .hero p {
-    font-size: 12px;
-    color: #999;
-    margin-bottom: 0;
-    letter-spacing: 0.04em;
+  .brand {
+    position: absolute; top: 24px; left: 28px;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.85);
     text-transform: uppercase;
-    text-align: center;
+    pointer-events: none;
+  }
+  .brand .mark {
+    display: inline-block; width: 6px; height: 6px;
+    background: #ff2d6f;
+    transform: rotate(45deg);
+    margin-right: 10px;
+    vertical-align: middle;
+    box-shadow: 0 0 10px #ff2d6f;
+  }
+
+  .coords {
+    position: absolute; top: 24px; right: 28px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.5);
+    text-align: right;
+    line-height: 1.7;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 12;
+  }
+  .coords .v { color: rgba(255,255,255,0.9); }
+
+  .controls {
+    position: absolute; bottom: 56px; right: 28px;
+    display: flex; gap: 6px;
+    z-index: 13;
+  }
+  .pill {
+    background: rgba(0,0,0,0.55);
+    border: 0.5px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  .pill:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.55);
+  }
+  .pill:active { transform: scale(0.96); }
+
+  .telemetry {
+    position: absolute; top: 60px; left: 28px;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    line-height: 1.7;
+    pointer-events: none;
+    z-index: 12;
+  }
+  .telemetry .v { color: rgba(255,255,255,0.75); }
+  .telemetry .phase {
+    color: #ff2d6f;
+    text-shadow: 0 0 8px rgba(255, 45, 111, 0.5);
+  }
+
+  /* ============ DARK GRADIENT VIGNETTES so text always reads ============ */
+  .vignette-bottom {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9;
+    background:
+      linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 25%, transparent 55%),
+      linear-gradient(to right, rgba(0,0,0,0.5) 0%, transparent 35%);
+    transition: opacity 1.4s ease;
+  }
+
+  /* ============ PHASE HEADLINE — the big centerpiece text ============ */
+  /* Lives left-of-centre, fills the lower 40% of the viewport.
+     Fades and slides in/out per phase. */
+  .phase-headline {
+    position: absolute;
+    left: 36px;
+    bottom: 110px;          /* well clear of ticker + controls */
+    max-width: 760px;
+    pointer-events: none;
+    z-index: 11;
+  }
+  .phase-headline .kicker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.9);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .phase-headline .kicker .dot {
+    width: 8px; height: 8px;
+    background: #ff2d6f;
+    border-radius: 50%;
+    box-shadow: 0 0 14px rgba(255, 45, 111, 0.8);
+    animation: pulseDot 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.7); }
+  }
+  .phase-headline h2 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(40px, 6.5vw, 92px);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    color: #fff;
+    text-shadow: 0 2px 30px rgba(0,0,0,0.85);
+    margin-bottom: 22px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.9s ease 0.1s, transform 0.9s ease 0.1s, color 1.4s ease, text-shadow 1.4s ease;
+  }
+  .phase-headline h2 em {
+    font-style: italic;
+    /* No more pink-on-bright issue — soft cream that reads on any background */
+    color: #ffd9c2;
+    transition: color 1.4s ease;
+  }
+  .phase-headline .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(11px, 0.95vw, 14px);
+    line-height: 1.55;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 520px;
+    text-shadow: 0 1px 10px rgba(0,0,0,0.85);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.9s ease 0.25s, transform 0.9s ease 0.25s, color 1.4s ease, text-shadow 1.4s ease;
+  }
+  .phase-headline.show .kicker,
+  .phase-headline.show h2,
+  .phase-headline.show .sub {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============ NEWS TICKER (bottom strip) ============ */
+  .ticker {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.75);
+    border-top: 0.5px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    z-index: 13;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    transition: background 1.4s ease, border-top-color 1.4s ease;
+  }
+  .ticker-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: tickerScroll 95s linear infinite;
+    padding-left: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: rgba(255, 255, 255, 0.9);
+    transition: color 1.4s ease;
+  }
+  .ticker-track .item { margin: 0 32px; }
+  .ticker-track .date {
+    color: #ff2d6f;
+    margin-right: 10px;
+    font-weight: 500;
+    /* Date stays uppercase mono for visual contrast */
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .ticker-track .sep { color: rgba(255,255,255,0.35); margin: 0 18px; }
+  @keyframes tickerScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  .phase-bar {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    pointer-events: none;
+  }
+  .phase-bar .seg {
+    width: 22px; height: 2px;
+    background: rgba(255,255,255,0.2);
+    transition: background 0.4s;
+  }
+  .phase-bar .seg.active { background: #ff2d6f; box-shadow: 0 0 8px rgba(255, 45, 111, 0.6); }
+
+  .loader {
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 99999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.8s;
+  }
+  .loader.hidden { opacity: 0; pointer-events: none; }
+  .loader-bar {
+    width: 200px; height: 1px;
+    background: rgba(255,255,255,0.15);
+    overflow: hidden;
+  }
+  .loader-bar-inner {
+    height: 100%; background: #ff2d6f;
+    transform-origin: left;
+    animation: load 1.4s ease-out forwards;
+  }
+  @keyframes load { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* ============ GENESIS-MODE TEXT INVERSION ============ */
+  /* (removed — page stays dark throughout) */
+
+  @media (max-width: 760px) {
+    .brand, .coords { font-size: 9px; }
+    .brand { top: 16px; left: 16px; }
+    .coords { top: 16px; right: 16px; }
+    .phase-headline { left: 16px; right: 16px; bottom: 80px; max-width: none; }
+    .phase-headline h2 { font-size: 36px; }
+    .phase-headline .sub { font-size: 11px; }
+    .ticker { height: 38px; }
+    .ticker-track { font-size: 12px; }
+    .ticker-track .date { font-size: 11px; }
   }
 </style>
 </head>
 <body>
 
-<p class="hook">Let me show you where prediction ends<br>and understanding begins.</p>
-<p class="hook-sub">Building probabilistic systems for the problems where overconfidence has real consequences.</p>
-
-<div class="hero">
-  <canvas id="walk" width="640" height="640"></canvas>
-  <h1>Aleatoric Lab</h1>
-  <p>Principled probabilistic machine learning</p>
+<div class="loader" id="loader">
+  <div class="loader-bar"><div class="loader-bar-inner"></div></div>
 </div>
 
+<canvas id="density"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="strands"></canvas>
+<div class="grain"></div>
+
+<!-- Dark gradient overlay so the headline reads no matter what's behind -->
+<div class="vignette-bottom"></div>
+
+<div class="ui">
+  <div class="brand"><span class="mark"></span>aleatoric lab</div>
+
+  <!-- THE BIG TEXT — single element, swaps content per phase with crossfade -->
+  <div class="phase-headline" id="phaseHeadline">
+    <h2 id="phHeadline"></h2>
+    <div class="sub" id="phSub"></div>
+  </div>
+
+  <!-- NEWS TICKER -->
+  <div class="ticker">
+    <div class="ticker-track">
+      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+      <span class="sep">◆</span>
+      <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
+      <span class="sep">◆</span>
+      <span class="item">Toward an open toolkit for interpretable machine learning, co-designed with researchers across disciplines</span>
+      <span class="sep">◆</span>
+      <span class="item">Bayesian inference · Uncertainty quantification · Gaussian processes · Epistemic reasoning · Probabilistic ML · Statistical learning · Neurosymbolic AI</span>
+      <span class="sep">◆</span>
+      <span class="item">Enquiries · rameezis@aleatoriclab.com</span>
+      <span class="sep">◆</span>
+      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+      <span class="sep">◆</span>
+      <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
 <script>
+// ============================================================
+// LAYER 0 — DENSITY CLOUDS (canvas2d, behind the 3D scene)
+// Slow purple/magenta gaussian blobs drifting horizontally.
+// Fades in during phase 6.
+// ============================================================
 (function() {
-  const canvas = document.getElementById('walk');
-  const dpr = window.devicePixelRatio || 1;
-  const W = 560, H = 560;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
+  const cv = document.getElementById('density');
+  const ctx = cv.getContext('2d');
+  let W, H, dpr, blobs = [];
+  let opacity = 0;
 
-  let seed = 42;
-  function rand() {
-    seed = (seed * 16807) % 2147483647;
-    return (seed - 1) / 2147483646;
-  }
-  function randn() {
-    let u = 0, v = 0;
-    while (!u) u = rand();
-    while (!v) v = rand();
-    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  // Origin at centre — paths radiate outward in all directions
-  const ox = W / 2, oy = H / 2;
-  const steps = 160;
-  const numPaths = 220;
-
-  const paths = [];
-  for (let p = 0; p < numPaths; p++) {
-    seed = 42 + p * 137;
-    // Split into left-going and right-going paths
-    const goRight = p % 2 === 0;
-    const baseAngle = goRight ? 0 : Math.PI;
-    // Spread across a wide arc on each side
-    const spread = (Math.PI * 1.1);
-    const angle = baseAngle + (rand() - 0.5) * spread;
-    let x = ox, y = oy;
-    const pts = [[x, y]];
-    for (let s = 0; s < steps; s++) {
-      // More noise relative to drift = wider organic spread
-      x += Math.cos(angle) * 1.1 + randn() * 2.8;
-      y += Math.sin(angle) * 1.1 + randn() * 2.8;
-      pts.push([x, y]);
+  function build() {
+    blobs = [];
+    for (let i = 0; i < 7; i++) {
+      blobs.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (0.15 + Math.random() * 0.4) * (Math.random() < 0.5 ? -1 : 1),
+        vy: (Math.random() - 0.5) * 0.1,
+        radius: 200 + Math.random() * 320,
+        hue: 280 + Math.random() * 50, // purple/magenta range
+        phase: Math.random() * Math.PI * 2,
+      });
     }
-    const pick = rand();
-    let hue, sat, lit;
-    if (pick < 0.55) { hue = 220 + randn() * 20; sat = 15 + rand() * 20; lit = 18 + rand() * 25; }
-    else if (pick < 0.85) { hue = 200 + randn() * 15; sat = 10 + rand() * 15; lit = 25 + rand() * 20; }
-    else { hue = 30 + randn() * 10; sat = 8 + rand() * 12; lit = 30 + rand() * 20; }
-    const alpha = 0.06 + rand() * 0.10;
-    const lw = 0.7 + rand() * 0.9;
-    paths.push({ pts, hue, sat, lit, alpha, lw });
   }
 
-  let startTime = null;
-  const duration = 3200;
+  // Exposed setter so master timeline can fade us in
+  window._densityFade = (a) => { opacity = a; };
 
-  function ease(t) {
-    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  }
+  let frame = 0;
+  function step() {
+    frame++;
+    // Trail-fade clear so blobs leave soft tails
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.04 + (1 - opacity) * 0.2})`;
+    ctx.fillRect(0, 0, W, H);
 
-  function draw(ts) {
-    if (!startTime) startTime = ts;
-    const raw = Math.min((ts - startTime) / duration, 1);
-    const t = ease(raw);
-    const drawSteps = Math.floor(t * steps);
+    if (opacity > 0.01) {
+      for (const b of blobs) {
+        b.x += b.vx;
+        b.y += b.vy + Math.sin(frame * 0.005 + b.phase) * 0.15;
+        if (b.x < -b.radius) b.x = W + b.radius;
+        if (b.x > W + b.radius) b.x = -b.radius;
+        if (b.y < -b.radius) b.y = H + b.radius;
+        if (b.y > H + b.radius) b.y = -b.radius;
 
-    ctx.clearRect(0, 0, W, H);
-
-    for (const { pts, hue, sat, lit, alpha, lw } of paths) {
-      if (drawSteps < 1) continue;
-      ctx.beginPath();
-      ctx.moveTo(pts[0][0], pts[0][1]);
-      for (let s = 1; s <= drawSteps && s < pts.length; s++) {
-        ctx.lineTo(pts[s][0], pts[s][1]);
+        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
+        grad.addColorStop(0, `hsla(${b.hue}, 80%, 55%, ${0.25 * opacity})`);
+        grad.addColorStop(0.5, `hsla(${b.hue}, 80%, 50%, ${0.08 * opacity})`);
+        grad.addColorStop(1, `hsla(${b.hue}, 80%, 50%, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.strokeStyle = `hsla(${hue},${sat}%,${lit}%,${alpha})`;
-      ctx.lineWidth = lw;
-      ctx.stroke();
+    }
+    requestAnimationFrame(step);
+  }
+
+  window.addEventListener('resize', () => { resize(); build(); });
+  resize(); build(); step();
+  window._densityRebuild = build;
+})();
+</script>
+
+<script>
+// ============================================================
+// LAYER 2 — SWIRLING STRANDS (canvas2d on top of 3D)
+// Anadol-style flow strands sweeping across the screen as a
+// translucent veil. Curl-noise field + tangential swirl.
+// Activates during phase 5; fades partially in phase 6.
+// ============================================================
+(function() {
+  const cv = document.getElementById('strands');
+  const ctx = cv.getContext('2d');
+  let W, H, dpr;
+  let particles = [];
+  let opacity = 0;
+  let frame = 0;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function hash2(x, y) {
+    let h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return (h - Math.floor(h)) * 2 - 1;
+  }
+  function smoothNoise(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf);
+    const v = yf * yf * (3 - 2 * yf);
+    const a = hash2(xi, yi), b = hash2(xi + 1, yi);
+    const c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+    return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+  }
+
+  const palettes = [
+    [[255, 50, 200], [80, 220, 255], [180, 80, 255], [255, 200, 60], [255, 80, 120]],
+    [[80, 255, 180], [255, 100, 220], [255, 220, 80], [120, 100, 255], [50, 200, 255]],
+  ];
+  let palette = palettes[0];
+
+  function build() {
+    palette = palettes[Math.floor(Math.random() * palettes.length)];
+    particles = [];
+    const N = 1100;
+    const cx = W * 0.5, cy = H * 0.5;
+    const sculptureR = Math.min(W, H) * 0.45;
+    for (let i = 0; i < N; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.pow(Math.random(), 1.4) * sculptureR;
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r * 0.85;
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      particles.push({
+        x, y, px: x, py: y,
+        vx: 0, vy: 0,
+        life: Math.random() * 200,
+        maxLife: 250 + Math.random() * 500,
+        r: c[0] + (Math.random() - 0.5) * 50,
+        g: c[1] + (Math.random() - 0.5) * 50,
+        b: c[2] + (Math.random() - 0.5) * 50,
+        thickness: 0.4 + Math.random() * 1.4,
+        alpha: 0.18 + Math.random() * 0.35,
+        homeX: x, homeY: y,
+      });
+    }
+  }
+
+  window._strandsFade = (a) => { opacity = a; };
+  window._strandsRebuild = build;
+
+  function step() {
+    frame++;
+
+    // If invisible, just sleep
+    if (opacity < 0.01) {
+      ctx.clearRect(0, 0, W, H);
+      requestAnimationFrame(step);
+      return;
     }
 
-    // Centre glow
-    const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, 20);
-    g.addColorStop(0, `rgba(20,30,70,${0.12 * t})`);
-    g.addColorStop(1, 'rgba(20,30,70,0)');
-    ctx.beginPath();
-    ctx.arc(ox, oy, 20, 0, Math.PI * 2);
-    ctx.fillStyle = g;
-    ctx.fill();
+    // Trail fade — softer when opacity is low so we don't accumulate junk
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.025 + (1 - opacity) * 0.05})`;
+    ctx.fillRect(0, 0, W, H);
 
-    // Centre dot
-    ctx.beginPath();
-    ctx.arc(ox, oy, 3, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(20,30,70,${0.3 + t * 0.55})`;
-    ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    const t = frame * 0.003;
+    const fieldScale = 0.0035;
 
-    if (raw < 1) requestAnimationFrame(draw);
+    for (const p of particles) {
+      const e = 0.01;
+      const n1 = smoothNoise(p.x * fieldScale, p.y * fieldScale + e + t * 0.5);
+      const n2 = smoothNoise(p.x * fieldScale, p.y * fieldScale - e + t * 0.5);
+      const n3 = smoothNoise(p.x * fieldScale + e, p.y * fieldScale + t * 0.5);
+      const n4 = smoothNoise(p.x * fieldScale - e, p.y * fieldScale + t * 0.5);
+      const cx_ = (n1 - n2) / (2 * e);
+      const cy_ = -(n3 - n4) / (2 * e);
+
+      const dx = p.x - W * 0.5;
+      const dy = p.y - H * 0.5;
+      const dist = Math.sqrt(dx * dx + dy * dy) + 1;
+      const swirlX = -dy / dist * 0.45;
+      const swirlY = dx / dist * 0.45;
+      const homeX = (p.homeX - p.x) * 0.0008;
+      const homeY = (p.homeY - p.y) * 0.0008;
+
+      p.vx = p.vx * 0.92 + cx_ * 0.5 + swirlX + homeX;
+      p.vy = p.vy * 0.92 + cy_ * 0.5 + swirlY + homeY;
+
+      p.px = p.x; p.py = p.y;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      ctx.strokeStyle = `rgba(${p.r|0}, ${p.g|0}, ${p.b|0}, ${p.alpha * opacity})`;
+      ctx.lineWidth = p.thickness;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(p.px, p.py);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+
+      p.life++;
+      if (p.life > p.maxLife || p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
+        const a = Math.random() * Math.PI * 2;
+        const r = Math.pow(Math.random(), 1.4) * Math.min(W, H) * 0.45;
+        p.x = W * 0.5 + Math.cos(a) * r;
+        p.y = H * 0.5 + Math.sin(a) * r * 0.85;
+        p.px = p.x; p.py = p.y;
+        p.vx = 0; p.vy = 0;
+        p.homeX = p.x; p.homeY = p.y;
+        p.life = 0;
+      }
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(step);
   }
 
-  requestAnimationFrame(draw);
+  window.addEventListener('resize', () => { resize(); build(); });
+  resize(); build(); step();
 })();
 </script>
 
-<p>
-  Aleatoric Lab was created by Rameez Raja out of a fascination with finding structure in places that resist it, and finding honesty in systems that are usually rewarded for projecting confidence they do not have. What drives the work here is a particular kind of curiosity: the belief that understanding something properly means being willing to say exactly how much you do not know, and that the most useful models are not the ones that give you an answer but the ones that tell you how much to trust it.
-</p>
+<script type="module">
+import * as THREE from 'three';
 
-<p>
-  The name comes from the Latin <em>alea</em>, meaning the roll of a die, and it refers specifically to <strong>aleatoric uncertainty</strong>, which is the irreducible randomness that lives inside every complex system regardless of how much data you collect or how sophisticated your methods become. What makes this idea compelling is that it does not belong to any single domain. It lives equally inside the decisions a hospital makes under resource pressure, inside a supply chain absorbing a geopolitical shock, inside a financial model being stress-tested against scenarios that have never happened before, and inside social systems trying to serve populations whose needs cannot be fully anticipated. The mathematics of irreducible uncertainty transfers across all of them, and what changes is only the domain knowledge you bring to bear on it.
-</p>
+// ============================================================
+// 6-PHASE CINEMATIC TIMELINE
+// 1. CITY     0-6s
+// 2. TOWERS   6-14s
+// 3. NETWORK  14-22s
+// 4. BLOOM    22-32s
+// 5. STRANDS  32-42s   (canvas overlay fades in)
+// 6. DENSITY  42-52s   (canvas backdrop fades in)
+// Hold all 52-60s, then loop with new seed.
+// ============================================================
+const canvas = document.getElementById('gl');
+const seedVal = document.getElementById('seedVal');           // may be null now
+const nodeCountEl = document.getElementById('nodeCount');     // may be null
+const phaseLabel = document.getElementById('phaseLabel');     // may be null
+const phaseBar = document.getElementById('phaseBar');         // may be null
+const pauseBtn = document.getElementById('pauseBtn');         // may be null
+const regenBtn = document.getElementById('regenBtn');         // may be null
 
-<p>
-  At Aleatoric Lab we build <strong>probabilistic ML and Bayesian systems</strong> that take this seriously, developing methods and tools for the domains where being honest about uncertainty is not a methodological nicety but an operational necessity. Because a model that knows its own limits is not a weaker model, it is a more trustworthy one, and in high-stakes environments that distinction is everything.
-</p>
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0); // transparent so density layer shows through
 
-<div class="keywords">
-  <span>Bayesian Inference</span>
-  <span>Uncertainty Quantification</span>
-  <span>Gaussian Processes</span>
-  <span>Epistemic Reasoning</span>
-  <span>Probabilistic ML</span>
-  <span>Statistical Learning</span>
-  <span>Neurosymbolic AI</span>
-</div>
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000000, 0.014);
 
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-
-<hr>
-
-<h2>Research Interests</h2>
-
-<p>Machine learning is at its most powerful not when it memorises patterns but when it generalises, when the same underlying structure surfaces across problems that look nothing like each other on the surface. The strength of probabilistic methods in particular lies in exactly this kind of transfer: the mathematics does not care whether you are modelling a hospital, a supply chain, or a social network. What connects the research areas below is not the domain but the problem structure. A Gaussian process modelling flood risk and one modelling misinformation credibility are solving the same mathematical problem. Multi-agent systems for supply chains and multi-agent systems for adversarial reasoning share the same core challenge. The mathematics of uncertainty does not respect disciplinary boundaries, and the research at Aleatoric Lab is built around that idea.</p>
-
-<canvas id="netcanvas" style="width:100%;display:block;margin:24px 0;"></canvas>
-<script>
-(function(){
-const canvas = document.getElementById('netcanvas');
-const ctx = canvas.getContext('2d');
-const W = 680, H = 430;
-canvas.width = W; canvas.height = H;
-
-const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
-const BG = dark ? '#141414' : '#ffffff';
-
-const COL = [
-  { label:'Methods',             hFill:'#3C3489', sFill:dark?'#1c1840':'#EEEDFE', nFill:dark?'#2a2458':'#CECBF6', stroke:'#534AB7', tc:dark?'#c8c4f8':'#26215C' },
-  { label:'What they enable',    hFill:'#085041', sFill:dark?'#0a1f1c':'#E1F5EE', nFill:dark?'#0c2e28':'#9FE1CB', stroke:'#0F6E56', tc:dark?'#8ee8c8':'#04342C' },
-  { label:'Application domains', hFill:'#712B13', sFill:dark?'#271005':'#FAECE7', nFill:dark?'#381508':'#F5C4B3', stroke:'#993C1D', tc:dark?'#f0b090':'#4A1B0C' },
+const PHASES = [
+  { name: 'GENESIS', start: 0,   end: 20 },
+  { name: 'CITY',    start: 20,  end: 36 },
+  { name: 'TOWERS',  start: 36,  end: 54 },
+  { name: 'NETWORK', start: 54,  end: 72 },
+  { name: 'BLOOM',   start: 72,  end: 92 },
+  { name: 'STRANDS', start: 92,  end: 112 },
+  { name: 'DENSITY', start: 112, end: 132 },
 ];
+const LOOP_DURATION = 140;
 
-const CX=[8,235,462], CW=207, HDR=36, TOP=8, BOT=H-8, ROWS=[6,4,7];
-
-const DEFS=[
-  {col:0,row:0,label:'Bayesian inference'},
-  {col:0,row:1,label:'Gaussian processes'},
-  {col:0,row:2,label:'Probabilistic ML'},
-  {col:0,row:3,label:'Statistical learning'},
-  {col:0,row:4,label:'Neurosymbolic AI'},
-  {col:0,row:5,label:'UQ methods'},
-  {col:1,row:0,label:'Prediction under uncertainty'},
-  {col:1,row:1,label:'Causal & epistemic reasoning'},
-  {col:1,row:2,label:'Robustness & stress-testing'},
-  {col:1,row:3,label:'Spatial & network modelling'},
-  {col:2,row:0,label:'Supply chain'},
-  {col:2,row:1,label:'Financial systems'},
-  {col:2,row:2,label:'Health & social'},
-  {col:2,row:3,label:'Misinformation'},
-  {col:2,row:4,label:'Policy & governance'},
-  {col:2,row:5,label:'Disaster risk'},
-  {col:2,row:6,label:'Multi-agent systems'},
-];
-
-const EDGES=[[0,6],[0,8],[1,6],[1,9],[2,6],[2,8],[3,6],[3,9],[4,7],[5,6],[5,8],[6,10],[6,11],[6,12],[7,13],[7,16],[8,10],[8,11],[8,14],[9,12],[9,15]];
-
-function nodeH(col){return 42;}
-function tX(col){return CX[col]+CW/2;}
-function tY(col,row){
-  const bh=42,gap=9;
-  return TOP+HDR+10+row*(bh+gap);
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
 }
 
-let seed=42;
-function rng(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646;}
+// ============================================================
+// CITY
+// ============================================================
+let cityGroup, cityLineMat, cityGroundMat;
+function buildCity(seed) {
+  const group = new THREE.Group();
+  cityLineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+  cityGroundMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
 
-const NAMED=DEFS.map((d,i)=>({...d,id:i,x:60+rng()*560,y:60+rng()*420,vx:(rng()-.5)*1.5,vy:(rng()-.5)*1.5,tx:tX(d.col),ty:tY(d.col,d.row)+nodeH(d.col)/2,r:5,named:true}));
-const EXTRA=Array.from({length:60},(_,i)=>({id:100+i,col:i%3,label:'',x:40+rng()*600,y:40+rng()*460,vx:(rng()-.5)*1.8,vy:(rng()-.5)*1.8,r:2.5+rng()*3,named:false}));
-const ALL=[...NAMED,...EXTRA];
-const XEDGES=[];
-for(let i=0;i<90;i++){const a=Math.floor(rng()*ALL.length);const b=Math.floor(rng()*ALL.length);if(a!==b)XEDGES.push([a,b]);}
+  let s = seed | 0;
+  const rand = () => {
+    s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 
-let phase=0,phaseStart=null,sA=0,bA=0,lA=0;
-function lerp(a,b,t){return a+(b-a)*t;}
-function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
-function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
-
-function rrect(x,y,w,h,r,fill,stroke,sw){
-  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-  if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||0.8;ctx.stroke();}
-}
-function rrectTop(x,y,w,h,r,fill){
-  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();
-}
-function wrap(text,maxW){
-  const words=text.split(' ');const lines=[];let line='';ctx.font='500 10px sans-serif';
-  words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;});
-  if(line)lines.push(line);return lines;
-}
-
-function draw(ts){
-  if(!phaseStart)phaseStart=ts;
-  const elapsed=(ts-phaseStart)/1000;
-  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
-
-  if(phase===0){
-    ALL.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<n.r||n.x>W-n.r)n.vx*=-1;if(n.y<n.r||n.y>H-n.r)n.vy*=-1;});
-    [...XEDGES.map(([a,b])=>[ALL[a],ALL[b]]),...EDGES.map(([a,b])=>[NAMED[a],NAMED[b]])].forEach(([na,nb])=>{
-      if(!na||!nb)return;const d=Math.hypot(na.x-nb.x,na.y-nb.y);if(d>240)return;
-      const al=clamp((1-d/240)*0.55,0,0.55);ctx.beginPath();ctx.moveTo(na.x,na.y);ctx.lineTo(nb.x,nb.y);ctx.strokeStyle=`rgba(127,119,221,${al})`;ctx.lineWidth=0.6;ctx.stroke();
-    });
-    ALL.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.named?COL[n.col].stroke:(dark?'#555':'#bbb');ctx.globalAlpha=n.named?0.9:0.5;ctx.fill();ctx.globalAlpha=1;});
-    if(elapsed>40){phase=1;phaseStart=ts;}
-
-  } else if(phase===1){
-    const pt=clamp((ts-phaseStart)/2200,0,1);const et=ease(pt);
-    NAMED.forEach(n=>{n.x=lerp(n.x,n.tx,.045);n.y=lerp(n.y,n.ty,.045);});
-    EXTRA.forEach(n=>{n.x+=n.vx*0.25;n.y+=n.vy*0.25;if(n.x<n.r||n.x>W-n.r)n.vx*=-1;if(n.y<n.r||n.y>H-n.r)n.vy*=-1;});
-    EXTRA.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=dark?'#444':'#ccc';ctx.globalAlpha=(1-et)*0.4;ctx.fill();ctx.globalAlpha=1;});
-    EDGES.forEach(([a,b])=>{const na=NAMED[a],nb=NAMED[b];ctx.beginPath();ctx.moveTo(na.x,na.y);ctx.lineTo(nb.x,nb.y);ctx.strokeStyle=`rgba(127,119,221,${0.25*et})`;ctx.lineWidth=0.7;ctx.stroke();});
-    NAMED.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=COL[n.col].stroke;ctx.globalAlpha=0.85;ctx.fill();ctx.globalAlpha=1;});
-    if(pt>=1){phase=2;phaseStart=ts;}
-
-  } else {
-    const pt=clamp((ts-phaseStart)/1400,0,1);
-    sA=ease(pt);bA=ease(clamp(pt-.15,0,1));lA=ease(clamp(pt-.45,0,1));
-    ctx.globalAlpha=sA;COL.forEach((c,ci)=>rrect(CX[ci],TOP,CW,BOT-TOP,8,c.sFill));COL.forEach((c,ci)=>rrectTop(CX[ci],TOP,CW,HDR,8,c.hFill));ctx.globalAlpha=1;
-    ctx.globalAlpha=sA;COL.forEach((c,ci)=>{ctx.fillStyle=dark?'#ddd':'#f0ede8';ctx.font='500 10.5px sans-serif';ctx.textAlign='center';ctx.fillText(c.label,CX[ci]+CW/2,TOP+HDR/2+4);});ctx.globalAlpha=1;
-    ctx.globalAlpha=bA;
-    EDGES.forEach(([a,b])=>{
-      const na=NAMED[a],nb=NAMED[b];
-      const fromX=CX[na.col]+CW, fromY=tY(na.col,na.row)+nodeH(na.col)/2;
-      const toX=CX[nb.col], toY=tY(nb.col,nb.row)+nodeH(nb.col)/2;
-      const edgeColor=na.col===0?'#7F77DD':'#1D9E75';
-      ctx.beginPath();ctx.moveTo(fromX,fromY);ctx.lineTo(toX,toY);
-      ctx.strokeStyle=edgeColor;ctx.lineWidth=1.4;ctx.globalAlpha=bA*0.55;ctx.stroke();
-      // arrowhead
-      const angle=Math.atan2(toY-fromY,toX-fromX);
-      const ax=toX-10*Math.cos(angle),ay=toY-10*Math.sin(angle);
-      ctx.beginPath();ctx.moveTo(toX,toY);
-      ctx.lineTo(ax-5*Math.cos(angle-Math.PI/6),ay-5*Math.sin(angle-Math.PI/6));
-      ctx.lineTo(ax-5*Math.cos(angle+Math.PI/6),ay-5*Math.sin(angle+Math.PI/6));
-      ctx.closePath();ctx.fillStyle=edgeColor;ctx.globalAlpha=bA*0.55;ctx.fill();
-    });
-    ctx.globalAlpha=1;
-    ctx.globalAlpha=bA;NAMED.forEach(n=>{rrect(CX[n.col],tY(n.col,n.row),CW,nodeH(n.col),4,COL[n.col].nFill,COL[n.col].stroke,0.8);});ctx.globalAlpha=1;
-    ctx.globalAlpha=lA;NAMED.forEach(n=>{const by=tY(n.col,n.row),bh=nodeH(n.col);ctx.fillStyle=COL[n.col].tc;ctx.textAlign='center';const lines=wrap(n.label,CW-16);const lh=13,total=lines.length*lh;lines.forEach((l,li)=>ctx.fillText(l,CX[n.col]+CW/2,by+bh/2-total/2+li*lh+lh*0.6));});ctx.globalAlpha=1;
+  for (let i = 0; i < 130; i++) {
+    const x = (rand() - 0.5) * 80;
+    const z = (rand() - 0.5) * 70;
+    if (Math.abs(x) < 6 && Math.abs(z) < 6) continue;
+    const w = 0.8 + rand() * 4;
+    const d = 0.8 + rand() * 4;
+    const h = 0.3 + rand() * (rand() < 0.18 ? 14 : 4);
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const edges = new THREE.EdgesGeometry(geo);
+    const line = new THREE.LineSegments(edges, cityLineMat);
+    line.position.set(x, h / 2, z);
+    group.add(line);
+    geo.dispose();
   }
-  requestAnimationFrame(draw);
+  const planeGeo = new THREE.PlaneGeometry(100, 100, 40, 40);
+  const planeWire = new THREE.LineSegments(new THREE.WireframeGeometry(planeGeo), cityGroundMat);
+  planeWire.rotation.x = -Math.PI / 2;
+  group.add(planeWire);
+  planeGeo.dispose();
+  return group;
 }
-requestAnimationFrame(draw);
-})();
+
+function updateCity(t) {
+  // City emerges 20-30, dims as more layers arrive
+  const baseAppear = smoothstep(20, 30, t);
+  const lateFade = 1 - smoothstep(36, 54, t) * 0.5 - smoothstep(92, 112, t) * 0.3;
+  const opacity = baseAppear * 0.28 * lateFade;
+  cityLineMat.opacity = Math.max(0, opacity);
+  cityGroundMat.opacity = Math.max(0, opacity * 0.25);
+}
+
+// ============================================================
+// GALAXY — opening visual (phase 0: GENESIS, 0–10s)
+// A volumetric particle field — thousands of stars filling 3D space,
+// banded into three colour zones (warm amber, deep blue, magenta/pink
+// transition) like staring into a section of the night sky / a galaxy.
+// Slow rotation, per-particle twinkle.
+// ============================================================
+let galaxyGroup, galaxyMat;
+const GALAXY_CENTRE = new THREE.Vector3(0, 12, 0);
+
+function buildGalaxy() {
+  if (galaxyGroup) {
+    scene.remove(galaxyGroup);
+    galaxyGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  }
+  galaxyGroup = new THREE.Group();
+  galaxyGroup.position.copy(GALAXY_CENTRE);
+  scene.add(galaxyGroup);
+
+  // Reference image: dense uniform mat of pinprick dots, three colour zones
+  // bleeding across X (warm amber → magenta → deep blue), each pinprick its
+  // own hue. Sparkle in place rather than drift.
+  const COUNT = 60000;          // dense mat, not a cloud
+  const positions = new Float32Array(COUNT * 3);
+  const colours   = new Float32Array(COUNT * 3);
+  const sizes     = new Float32Array(COUNT);
+  const tw        = new Float32Array(COUNT);
+
+  // Fill a wide slab uniformly — no Gaussian clumping, no diagonal ridge.
+  // We want even density across the frame.
+  const SLAB_W = 80;
+  const SLAB_H = 50;
+  const SLAB_D = 14;     // shallow depth so all particles read at similar size
+
+  // Hue strategy: a smooth horizontal gradient from warm-left to cool-right,
+  // BUT each individual particle picks from a palette near its position so
+  // colours visibly mix at every point. That's what gives the reference its
+  // "yellow grain next to red grain next to white" texture.
+
+  function hueForX(xNorm, jitter) {
+    // xNorm in [-1, 1]
+    // We pick from one of three palettes by zone, but with bleed into neighbours
+    // so adjacent particles can be from different palettes.
+
+    // bleed: 35% chance to pick from a neighbouring zone's palette
+    let zone;
+    const r = Math.random();
+    if (xNorm < -0.33) {
+      zone = (r < 0.7) ? 'warm' : (r < 0.95 ? 'mid' : 'cool');
+    } else if (xNorm > 0.33) {
+      zone = (r < 0.7) ? 'cool' : (r < 0.95 ? 'mid' : 'warm');
+    } else {
+      // middle zone: roughly evenly mixed pink/red/blue
+      zone = (r < 0.4) ? 'mid' : (r < 0.7 ? 'warm' : 'cool');
+    }
+
+    // Each palette is wide so within-zone variety is high
+    const warm = [
+      [1.00, 0.78, 0.42],   // amber
+      [1.00, 0.62, 0.28],   // orange
+      [1.00, 0.85, 0.55],   // gold
+      [0.95, 0.45, 0.30],   // ember red
+      [1.00, 0.92, 0.70],   // pale gold-white
+      [1.00, 0.55, 0.20],   // deep amber
+      [1.00, 0.95, 0.85],   // near-white warm
+    ];
+    const mid = [
+      [1.00, 0.40, 0.65],   // hot pink
+      [0.85, 0.30, 0.75],   // magenta
+      [0.95, 0.55, 0.75],   // dusty pink
+      [0.70, 0.40, 0.95],   // light violet
+      [1.00, 0.65, 0.80],   // peach pink
+      [0.95, 0.95, 0.95],   // white
+    ];
+    const cool = [
+      [0.20, 0.35, 1.00],   // royal blue
+      [0.35, 0.50, 1.00],   // periwinkle
+      [0.50, 0.70, 1.00],   // sky blue
+      [0.55, 0.40, 1.00],   // violet-blue
+      [0.85, 0.92, 1.00],   // pale blue-white
+      [0.15, 0.25, 0.95],   // deep blue
+      [0.95, 0.95, 1.00],   // near-white cool
+    ];
+    const arr = zone === 'warm' ? warm : (zone === 'cool' ? cool : mid);
+    const c = arr[Math.floor(Math.random() * arr.length)];
+    return [
+      Math.max(0, Math.min(1, c[0] + (Math.random() - 0.5) * jitter)),
+      Math.max(0, Math.min(1, c[1] + (Math.random() - 0.5) * jitter)),
+      Math.max(0, Math.min(1, c[2] + (Math.random() - 0.5) * jitter)),
+    ];
+  }
+
+  for (let i = 0; i < COUNT; i++) {
+    // UNIFORM distribution across the slab — no Gaussian, no ridge
+    const x = (Math.random() - 0.5) * SLAB_W;
+    const y = (Math.random() - 0.5) * SLAB_H;
+    const z = (Math.random() - 0.5) * SLAB_D;
+
+    positions[i * 3]     = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+
+    // Colour: based on horizontal position with palette mixing
+    const xNorm = x / (SLAB_W * 0.5);
+    const c = hueForX(xNorm, 0.10);
+    colours[i * 3]     = c[0];
+    colours[i * 3 + 1] = c[1];
+    colours[i * 3 + 2] = c[2];
+
+    // SIZE: most particles tiny pinpricks; a small minority slightly larger
+    // so the field has visible texture grain without bloomy bokeh
+    const r = Math.random();
+    if (r < 0.02) {
+      sizes[i] = 0.10 + Math.random() * 0.08;     // rare bright stars
+    } else if (r < 0.15) {
+      sizes[i] = 0.04 + Math.random() * 0.03;     // slightly visible
+    } else {
+      sizes[i] = 0.012 + Math.random() * 0.025;   // pinpricks (most)
+    }
+
+    tw[i] = Math.random() * Math.PI * 2;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aColor',   new THREE.BufferAttribute(colours, 3));
+  geo.setAttribute('aSize',    new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('aTwinkle', new THREE.BufferAttribute(tw, 1));
+
+  galaxyMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uPixelRatio: { value: renderer.getPixelRatio() },
+      uOpacity: { value: 0 },
+      uTime: { value: 0 },
+    },
+    vertexShader: `
+      attribute vec3 aColor;
+      attribute float aSize;
+      attribute float aTwinkle;
+      uniform float uPixelRatio;
+      uniform float uTime;
+      varying vec3 vColor;
+      varying float vTw;
+      void main() {
+        vColor = aColor;
+        // Strong twinkle so particles sparkle in place — that's the motion
+        // we want from the reference, not drift
+        vTw = 0.45 + 0.55 * sin(uTime * 2.2 + aTwinkle);
+
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mv;
+        gl_PointSize = aSize * 380.0 * uPixelRatio / -mv.z;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uOpacity;
+      varying vec3 vColor;
+      varying float vTw;
+      void main() {
+        vec2 d = gl_PointCoord - 0.5;
+        float r = dot(d, d);
+        if (r > 0.25) discard;
+        // Sharper falloff = crisper pinpricks, less bloom
+        float core = pow(1.0 - r * 4.0, 1.4);
+        gl_FragColor = vec4(vColor * (0.85 + core * 0.4), core * uOpacity * vTw);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const cloud = new THREE.Points(geo, galaxyMat);
+  galaxyGroup.add(cloud);
+}
+
+function updateGalaxy(t, elapsed) {
+  // Visible 0-20s, fades out 17-20
+  const visible = 1 - smoothstep(17, 20, t);
+
+  if (galaxyMat) {
+    galaxyMat.uniforms.uOpacity.value = visible;
+    galaxyMat.uniforms.uTime.value = elapsed;
+  }
+  if (galaxyGroup) {
+    galaxyGroup.visible = visible > 0.001;
+    if (galaxyGroup.visible) {
+      // Almost no rotation — reference image is nearly static, just sparkles
+      galaxyGroup.rotation.y = elapsed * 0.008;
+      galaxyGroup.rotation.x = Math.sin(elapsed * 0.012) * 0.02;
+    }
+  }
+}
+
+function rebuildGlobe() {
+  // Same name as before so buildScene() rebuild path still works
+  buildGalaxy();
+}
+
+// Backwards compat — frame loop calls updateGlobe(t, elapsed)
+function updateGlobe(t, elapsed) { updateGalaxy(t, elapsed); }
+
+
+// ============================================================
+// TOWERS
+// ============================================================
+let towerA, towerB;
+let towerAAnchors = [], towerBAnchors = [];
+let totalNodes = 0;
+
+const towerMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uPixelRatio: { value: renderer.getPixelRatio() },
+    uReveal: { value: 0 },
+    uOpacity: { value: 1 },
+  },
+  vertexShader: `
+    attribute float aSize;
+    attribute float aOffset;
+    attribute float aBuildHeight;
+    varying vec3 vColor;
+    varying float vAlpha;
+    uniform float uTime;
+    uniform float uPixelRatio;
+    uniform float uReveal;
+    uniform float uOpacity;
+    void main() {
+      vColor = color;
+      vec3 p = position;
+      p.y += sin(uTime * 1.5 + aOffset) * 0.04;
+      p.x += sin(uTime * 0.8 + aOffset * 1.3) * 0.025;
+      p.z += cos(uTime * 1.1 + aOffset * 0.7) * 0.025;
+      float visible = step(aBuildHeight, uReveal);
+      float tipFade = smoothstep(uReveal - 0.06, uReveal, aBuildHeight);
+      vAlpha = visible * (1.0 - tipFade * 0.7) * uOpacity;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = aSize * 320.0 * uPixelRatio / -mv.z;
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      if (vAlpha < 0.01) discard;
+      vec2 d = gl_PointCoord - 0.5;
+      float r = dot(d, d);
+      if (r > 0.25) discard;
+      float falloff = 1.0 - r * 4.0;
+      gl_FragColor = vec4(vColor * (0.7 + falloff * 0.6), falloff * 0.95 * vAlpha);
+    }
+  `,
+  vertexColors: true,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+
+function buildTower({ x, z, width, depth, height, density, hueOffset, seed }) {
+  let s = seed | 0;
+  const rand = () => {
+    s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+  const surfacePoints = Math.floor(45000 * density);
+  const volumePoints  = Math.floor(15000 * density);
+  const dustPoints    = Math.floor(10000 * density);
+  const total = surfacePoints + volumePoints + dustPoints;
+  const positions = new Float32Array(total * 3);
+  const colors    = new Float32Array(total * 3);
+  const sizes     = new Float32Array(total);
+  const offsets   = new Float32Array(total);
+  const buildHeight = new Float32Array(total);
+  let i = 0;
+  function hsl(h, sat, l) { return new THREE.Color().setHSL(h, sat, l); }
+
+  for (let k = 0; k < surfacePoints; k++) {
+    let lx, ly, lz;
+    const face = Math.floor(rand() * 5);
+    if (face === 0) { lx = -width/2; ly = rand() * height; lz = (rand() - 0.5) * depth; }
+    else if (face === 1) { lx = width/2; ly = rand() * height; lz = (rand() - 0.5) * depth; }
+    else if (face === 2) { lx = (rand() - 0.5) * width; ly = rand() * height; lz = -depth/2; }
+    else if (face === 3) { lx = (rand() - 0.5) * width; ly = rand() * height; lz = depth/2; }
+    else { lx = (rand() - 0.5) * width; ly = height; lz = (rand() - 0.5) * depth; }
+    lx += (rand() - 0.5) * 0.45;
+    lz += (rand() - 0.5) * 0.45;
+    positions[i*3] = x + lx; positions[i*3+1] = ly; positions[i*3+2] = z + lz;
+    const t = ly / height;
+    const c = hsl((hueOffset + t * 0.85) % 1, 0.95, 0.55);
+    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+    sizes[i] = 0.04 + rand() * 0.06;
+    offsets[i] = rand() * Math.PI * 2;
+    buildHeight[i] = t;
+    i++;
+  }
+  for (let k = 0; k < volumePoints; k++) {
+    const eb = (v) => Math.sign(v) * Math.pow(Math.abs(v), 0.7);
+    const lx = eb((rand() - 0.5) * 2) * width / 2;
+    const ly = rand() * height;
+    const lz = eb((rand() - 0.5) * 2) * depth / 2;
+    positions[i*3] = x + lx; positions[i*3+1] = ly; positions[i*3+2] = z + lz;
+    const t = ly / height;
+    const c = hsl((hueOffset + t * 0.85) % 1, 0.9, 0.5);
+    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+    sizes[i] = 0.03 + rand() * 0.05;
+    offsets[i] = rand() * Math.PI * 2;
+    buildHeight[i] = t;
+    i++;
+  }
+  for (let k = 0; k < dustPoints; k++) {
+    const lx = (rand() - 0.5) * width * 2.4;
+    const ly = rand() * height * 1.18;
+    const lz = (rand() - 0.5) * depth * 2.4;
+    positions[i*3] = x + lx; positions[i*3+1] = ly; positions[i*3+2] = z + lz;
+    const t = Math.max(0, Math.min(1, ly / height));
+    const c = hsl((hueOffset + t * 0.85) % 1, 0.7, 0.55);
+    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+    sizes[i] = 0.025 + rand() * 0.04;
+    offsets[i] = rand() * Math.PI * 2;
+    buildHeight[i] = t;
+    i++;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('aOffset', new THREE.BufferAttribute(offsets, 1));
+  geo.setAttribute('aBuildHeight', new THREE.BufferAttribute(buildHeight, 1));
+  const anchors = [];
+  for (let k = 0; k < 60; k++) {
+    const idx = Math.floor(rand() * surfacePoints) * 3;
+    anchors.push(new THREE.Vector3(positions[idx], positions[idx+1], positions[idx+2]));
+  }
+  return { geometry: geo, count: total, anchors };
+}
+
+function updateTowers(t) {
+  const reveal = smoothstep(36, 48, t);
+  towerMat.uniforms.uReveal.value = Math.max(reveal, 0.0001);
+  // Towers fade slightly in later phases so the strands/density read
+  const lateFade = 1 - smoothstep(82, 92, t) * 0.3 - smoothstep(102, 112, t) * 0.3;
+  towerMat.uniforms.uOpacity.value = Math.max(0.2, lateFade);
+}
+
+// ============================================================
+// NETWORK
+// ============================================================
+class Connections {
+  constructor(maxLinks, segments) {
+    this.maxLinks = maxLinks; this.segments = segments;
+    this.links = [];
+    const maxVerts = maxLinks * segments * 2;
+    this.positions = new Float32Array(maxVerts * 3);
+    this.colors = new Float32Array(maxVerts * 3);
+    this.geo = new THREE.BufferGeometry();
+    this.geo.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+    this.geo.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
+    this.geo.setDrawRange(0, 0);
+    this.material = new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    this.mesh = new THREE.LineSegments(this.geo, this.material);
+  }
+  spawn(from, to, color) {
+    if (this.links.length >= this.maxLinks) return;
+    const mid = from.clone().lerp(to, 0.5);
+    const dist = from.distanceTo(to);
+    mid.y += dist * 0.3 + Math.random() * 2;
+    mid.x += (Math.random() - 0.5) * 4;
+    mid.z += (Math.random() - 0.5) * 4;
+    this.links.push({ from: from.clone(), to: to.clone(), mid, color: color.clone(),
+      progress: 0, decay: 0,
+      speed: 0.012 + Math.random() * 0.018,
+      decaySpeed: 0.005 + Math.random() * 0.006 });
+  }
+  update() {
+    for (let i = this.links.length - 1; i >= 0; i--) {
+      const l = this.links[i];
+      if (l.progress < 1) l.progress = Math.min(1, l.progress + l.speed);
+      else { l.decay += l.decaySpeed; if (l.decay >= 1) { this.links.splice(i, 1); continue; } }
+    }
+    let v = 0;
+    const tmp = new THREE.Vector3();
+    for (const l of this.links) {
+      const tipT = l.progress;
+      const alpha = (l.progress < 1 ? Math.pow(l.progress, 0.6) : 1.0) * (1 - l.decay);
+      let prev = null;
+      for (let k = 0; k <= this.segments; k++) {
+        const t = (k / this.segments) * tipT;
+        const u = 1 - t;
+        tmp.set(
+          u*u*l.from.x + 2*u*t*l.mid.x + t*t*l.to.x,
+          u*u*l.from.y + 2*u*t*l.mid.y + t*t*l.to.y,
+          u*u*l.from.z + 2*u*t*l.mid.z + t*t*l.to.z
+        );
+        if (prev) {
+          this.positions[v*3] = prev.x; this.positions[v*3+1] = prev.y; this.positions[v*3+2] = prev.z;
+          this.colors[v*3] = l.color.r * alpha; this.colors[v*3+1] = l.color.g * alpha; this.colors[v*3+2] = l.color.b * alpha;
+          v++;
+          this.positions[v*3] = tmp.x; this.positions[v*3+1] = tmp.y; this.positions[v*3+2] = tmp.z;
+          this.colors[v*3] = l.color.r * alpha; this.colors[v*3+1] = l.color.g * alpha; this.colors[v*3+2] = l.color.b * alpha;
+          v++;
+        }
+        if (!prev) prev = new THREE.Vector3();
+        prev.copy(tmp);
+      }
+    }
+    this.geo.setDrawRange(0, v);
+    this.geo.attributes.position.needsUpdate = true;
+    this.geo.attributes.color.needsUpdate = true;
+  }
+}
+const connections = new Connections(60, 24);
+let nextSpawnTime = 54;
+
+function updateNetwork(t) {
+  // Connections active during phase 3 onward, fade gradually after phase 5
+  const intensity = smoothstep(54, 62, t) * (1 - smoothstep(102, 122, t) * 0.7);
+  connections.material.opacity = Math.max(0, 0.5 + intensity * 0.4);
+
+  const spawnInterval = 0.5 - intensity * 0.4;
+  if (t >= nextSpawnTime && intensity > 0.05 && towerAAnchors.length > 0 && towerBAnchors.length > 0) {
+    const r = Math.random();
+    let from, to, color;
+    if (r < 0.6) {
+      from = towerAAnchors[Math.floor(Math.random() * towerAAnchors.length)];
+      to   = towerBAnchors[Math.floor(Math.random() * towerBAnchors.length)];
+      color = new THREE.Color().setHSL(0.85 + Math.random() * 0.15, 0.9, 0.65);
+    } else {
+      if (Math.random() < 0.5) {
+        from = towerAAnchors[Math.floor(Math.random() * towerAAnchors.length)];
+        color = new THREE.Color().setHSL(0.95, 0.9, 0.65);
+      } else {
+        from = towerBAnchors[Math.floor(Math.random() * towerBAnchors.length)];
+        color = new THREE.Color().setHSL(0.55, 0.9, 0.65);
+      }
+      to = vascularCentre.clone();
+      to.y += (Math.random() - 0.5) * 4;
+      to.x += (Math.random() - 0.5) * 3;
+      to.z += (Math.random() - 0.5) * 3;
+    }
+    connections.spawn(from, to, color);
+    nextSpawnTime = t + spawnInterval;
+  }
+  connections.update();
+}
+
+// ============================================================
+// VASCULAR BLOOM
+// ============================================================
+const vascularCentre = new THREE.Vector3(0.5, 12, -1);
+
+function hash3(x, y, z) {
+  let h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
+  return (h - Math.floor(h)) * 2 - 1;
+}
+function noise3(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const xf = x - xi, yf = y - yi, zf = z - zi;
+  const u = xf*xf*(3-2*xf), v = yf*yf*(3-2*yf), w = zf*zf*(3-2*zf);
+  function corner(dx, dy, dz) { return hash3(xi+dx, yi+dy, zi+dz); }
+  const c000 = corner(0,0,0), c100 = corner(1,0,0);
+  const c010 = corner(0,1,0), c110 = corner(1,1,0);
+  const c001 = corner(0,0,1), c101 = corner(1,0,1);
+  const c011 = corner(0,1,1), c111 = corner(1,1,1);
+  const x00 = c000*(1-u) + c100*u;
+  const x10 = c010*(1-u) + c110*u;
+  const x01 = c001*(1-u) + c101*u;
+  const x11 = c011*(1-u) + c111*u;
+  return (x00*(1-v) + x10*v)*(1-w) + (x01*(1-v) + x11*v)*w;
+}
+function curl3(x, y, z) {
+  const e = 0.1;
+  const nx1 = noise3(x, y + e, z) - noise3(x, y - e, z);
+  const nx2 = noise3(x, y, z + e) - noise3(x, y, z - e);
+  const ny1 = noise3(x, y, z + e) - noise3(x, y, z - e);
+  const ny2 = noise3(x + e, y, z) - noise3(x - e, y, z);
+  const nz1 = noise3(x + e, y, z) - noise3(x - e, y, z);
+  const nz2 = noise3(x, y + e, z) - noise3(x, y - e, z);
+  return [(nx1 - nx2) / (2 * e), (ny1 - ny2) / (2 * e), (nz1 - nz2) / (2 * e)];
+}
+
+let vascularMesh, vascularMat;
+
+function buildVascular(seed) {
+  const allStrands = [];
+  const clusterCount = 12;
+  const hues = [0.0, 0.06, 0.13, 0.22, 0.35, 0.48, 0.55, 0.62, 0.7, 0.78, 0.86, 0.93];
+  let s = seed | 0;
+  const rand = () => {
+    s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+  const phi = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < clusterCount; i++) {
+    const y = 1 - (i / (clusterCount - 1)) * 2;
+    const radius = Math.sqrt(1 - y * y);
+    const theta = phi * i;
+    let dx = Math.cos(theta) * radius, dy = y, dz = Math.sin(theta) * radius;
+    const rotY = rand() * Math.PI * 2;
+    const cy = Math.cos(rotY), sy = Math.sin(rotY);
+    const ndx = dx * cy - dz * sy, ndz = dx * sy + dz * cy;
+    dx = ndx; dz = ndz;
+    const baseHue = hues[i % hues.length];
+    const strandCount = 26 + Math.floor(rand() * 14);
+    for (let str = 0; str < strandCount; str++) {
+      const strand = [];
+      const startJitter = 0.3;
+      const pos = [
+        vascularCentre.x + dx * 0.5 + (rand() - 0.5) * startJitter,
+        vascularCentre.y + dy * 0.5 + (rand() - 0.5) * startJitter,
+        vascularCentre.z + dz * 0.5 + (rand() - 0.5) * startJitter,
+      ];
+      const cone = 0.4;
+      const ddir = [dx + (rand() - 0.5) * cone, dy + (rand() - 0.5) * cone, dz + (rand() - 0.5) * cone];
+      const dn = Math.hypot(ddir[0], ddir[1], ddir[2]) || 1;
+      ddir[0] /= dn; ddir[1] /= dn; ddir[2] /= dn;
+      let vx = ddir[0] * 0.03, vy = ddir[1] * 0.03, vz = ddir[2] * 0.03;
+      const segments = Math.floor(60 + rand() * 140);
+      const hue = (baseHue + (rand() - 0.5) * 0.04 + 1) % 1;
+      const col = new THREE.Color().setHSL(hue, 0.9 + rand() * 0.1, 0.5 + rand() * 0.2);
+      const stepSize = 0.06 + rand() * 0.07;
+      const curlScale = 0.4, curlStrength = 0.04, dirStrength = 0.018;
+      for (let k = 0; k < segments; k++) {
+        strand.push({
+          x: pos[0], y: pos[1], z: pos[2],
+          alpha: Math.min(1, k / 5) * (1 - Math.pow(k / segments, 1.6)),
+          color: col,
+        });
+        const c = curl3(pos[0] * curlScale, pos[1] * curlScale, pos[2] * curlScale);
+        vx += c[0] * curlStrength + ddir[0] * dirStrength;
+        vy += c[1] * curlStrength + ddir[1] * dirStrength;
+        vz += c[2] * curlStrength + ddir[2] * dirStrength;
+        vx *= 0.92; vy *= 0.92; vz *= 0.92;
+        const vn = Math.hypot(vx, vy, vz) || 1;
+        vx = (vx / vn) * stepSize; vy = (vy / vn) * stepSize; vz = (vz / vn) * stepSize;
+        pos[0] += vx; pos[1] += vy; pos[2] += vz;
+      }
+      if (strand.length > 1) allStrands.push(strand);
+    }
+  }
+  return allStrands;
+}
+
+function buildVascularMesh(strands) {
+  let segCount = 0;
+  for (const s of strands) segCount += Math.max(0, s.length - 1);
+  const positions = new Float32Array(segCount * 2 * 3);
+  const rgb = new Float32Array(segCount * 2 * 3);
+  const alpha = new Float32Array(segCount * 2);
+  const along = new Float32Array(segCount * 2);
+  const strandPhase = new Float32Array(segCount * 2);
+  let v = 0;
+  for (const s of strands) {
+    const phase = Math.random() * 0.7;
+    for (let i = 0; i < s.length - 1; i++) {
+      const a = s[i], b = s[i + 1];
+      positions[v*3] = a.x; positions[v*3+1] = a.y; positions[v*3+2] = a.z;
+      rgb[v*3] = a.color.r; rgb[v*3+1] = a.color.g; rgb[v*3+2] = a.color.b;
+      alpha[v] = a.alpha; along[v] = i / (s.length - 1); strandPhase[v] = phase;
+      v++;
+      positions[v*3] = b.x; positions[v*3+1] = b.y; positions[v*3+2] = b.z;
+      rgb[v*3] = b.color.r; rgb[v*3+1] = b.color.g; rgb[v*3+2] = b.color.b;
+      alpha[v] = b.alpha; along[v] = (i + 1) / (s.length - 1); strandPhase[v] = phase;
+      v++;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aColor', new THREE.BufferAttribute(rgb, 3));
+  geo.setAttribute('aAlpha', new THREE.BufferAttribute(alpha, 1));
+  geo.setAttribute('aAlong', new THREE.BufferAttribute(along, 1));
+  geo.setAttribute('aStrandPhase', new THREE.BufferAttribute(strandPhase, 1));
+  return geo;
+}
+
+vascularMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 }, uGrowth: { value: 0 }, uOpacity: { value: 1 } },
+  vertexShader: `
+    attribute vec3 aColor;
+    attribute float aAlpha;
+    attribute float aAlong;
+    attribute float aStrandPhase;
+    varying vec3 vColor;
+    varying float vAlpha;
+    uniform float uTime;
+    uniform float uGrowth;
+    uniform float uOpacity;
+    void main() {
+      vColor = aColor;
+      float strandGrowth = clamp((uGrowth - aStrandPhase) / (1.0 - aStrandPhase + 0.001), 0.0, 1.0);
+      float visible = step(aAlong, strandGrowth);
+      float tipFade = smoothstep(strandGrowth - 0.04, strandGrowth, aAlong);
+      vAlpha = aAlpha * visible * (1.0 - tipFade * 0.7) * uOpacity;
+      vec3 p = position;
+      float breath = sin(uTime * 0.8 + aStrandPhase * 6.28) * 0.015;
+      p += normalize(position - vec3(${vascularCentre.x.toFixed(3)}, ${vascularCentre.y.toFixed(3)}, ${vascularCentre.z.toFixed(3)}) + vec3(0.001)) * breath;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      if (vAlpha < 0.01) discard;
+      gl_FragColor = vec4(vColor, vAlpha * 0.9);
+    }
+  `,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+
+function updateVascular(t) {
+  const g = smoothstep(72, 92, t);
+  vascularMat.uniforms.uGrowth.value = g;
+  // Vascular fades a bit when strands take over
+  const strandsFade = 1 - smoothstep(102, 112, t) * 0.4;
+  vascularMat.uniforms.uOpacity.value = strandsFade;
+}
+
+// ============================================================
+// Build the scene
+// ============================================================
+let currentSeed;
+function buildScene(seed) {
+  currentSeed = seed;
+  if (seedVal) seedVal.textContent = seed.toString().padStart(5, '0');
+
+  if (cityGroup) scene.remove(cityGroup);
+  if (towerA) { scene.remove(towerA); towerA.geometry.dispose(); }
+  if (towerB) { scene.remove(towerB); towerB.geometry.dispose(); }
+  if (vascularMesh) { scene.remove(vascularMesh); vascularMesh.geometry.dispose(); }
+
+  cityGroup = buildCity(seed);
+  scene.add(cityGroup);
+
+  const aData = buildTower({ x: -7, z: 0, width: 7, depth: 6, height: 14, density: 1.0, hueOffset: 0.95, seed: seed + 17 });
+  towerA = new THREE.Points(aData.geometry, towerMat);
+  towerAAnchors = aData.anchors;
+  scene.add(towerA);
+
+  const bData = buildTower({ x: 8, z: -2, width: 5, depth: 5, height: 22, density: 1.1, hueOffset: 0.5, seed: seed + 89 });
+  towerB = new THREE.Points(bData.geometry, towerMat);
+  towerBAnchors = bData.anchors;
+  scene.add(towerB);
+
+  const strands = buildVascular(seed + 137);
+  const geo = buildVascularMesh(strands);
+  vascularMesh = new THREE.LineSegments(geo, vascularMat);
+  scene.add(vascularMesh);
+
+  totalNodes = aData.count + bData.count;
+  let strandNodes = 0;
+  for (const s of strands) strandNodes += s.length;
+  totalNodes += strandNodes;
+
+  if (!connections.added) { scene.add(connections.mesh); connections.added = true; }
+  connections.links.length = 0;
+  nextSpawnTime = 54;
+
+  // Rebuild canvas layers too
+  if (window._strandsRebuild) window._strandsRebuild();
+  if (window._densityRebuild) window._densityRebuild();
+  if (typeof rebuildGlobe === 'function') rebuildGlobe();
+
+  // Reset phase tracker on subsequent rebuilds (loop / regenerate)
+  // — but NOT on the very first build, since we set phase 0 already at module load
+  if (typeof phaseHeadlineEl !== 'undefined' && phaseHeadlineEl && masterTime > 0) {
+    lastShownPhase = -1;
+    phaseHeadlineEl.classList.remove('show');
+  }
+
+  masterTime = 0;
+}
+
+// ============================================================
+// Camera
+// ============================================================
+function updateCamera(t) {
+  // Phase 0 (GENESIS): camera tight on the globe at y=12.
+  // Phase 1+ (CITY onward): existing wide orbit choreography.
+  // Smoothly blend between the two over 8-12s.
+
+  // === Genesis camera params ===
+  const orbitSlow = t * 0.04;          // very slow orbit — reference image feels static-ish
+  const genTheta = orbitSlow + mouse.x * 0.18;
+  const genPhi = 0.05 + mouse.y * 0.08;
+  const genRadius = 32;                 // close enough that the dense mat fills frame
+  const genCamPos = new THREE.Vector3(
+    Math.cos(genTheta) * Math.cos(genPhi) * genRadius,
+    GALAXY_CENTRE.y + Math.sin(genPhi) * genRadius * 0.4,
+    Math.sin(genTheta) * Math.cos(genPhi) * genRadius
+  );
+  const genLookAt = GALAXY_CENTRE.clone();
+
+  // === City+ camera params ===
+  const orbit = t * 0.06;
+  const earlyR = 42, lateR = 32;
+  const radiusBlend = smoothstep(20, 92, t);
+  const radius = earlyR + (lateR - earlyR) * radiusBlend;
+  const earlyPhi = 0.55, latePhi = 0.42;
+  const phi = earlyPhi + (latePhi - earlyPhi) * radiusBlend;
+  const theta = orbit + mouse.x * 0.4;
+  const phiM = phi + mouse.y * 0.18;
+  const cityCamPos = new THREE.Vector3(
+    Math.cos(theta) * Math.cos(phiM) * radius,
+    8 + Math.sin(phiM) * radius * 0.4,
+    Math.sin(theta) * Math.cos(phiM) * radius
+  );
+  const cityLookY = 8 + smoothstep(70, 92, t) * 4;
+  const cityLookAt = new THREE.Vector3(0, cityLookY, 0);
+
+  // Blend genesis → city over 17–22s (galaxy fades 17–20, city emerges 20–30)
+  const blend = smoothstep(17, 22, t);
+  camera.position.lerpVectors(genCamPos, cityCamPos, blend);
+  const lookAt = new THREE.Vector3().lerpVectors(genLookAt, cityLookAt, blend);
+  camera.lookAt(lookAt);
+}
+
+// ============================================================
+// Phase indicator + phase-changing big text
+// ============================================================
+const PHASE_TEXT = [
+  { // 0 GENESIS — your tagline opens the show on the white canvas
+    kicker: 'Aleatoric Lab · Principled probabilistic ML',
+    headline: 'Let me show you where prediction <em>ends</em><br>and understanding <em>begins</em>.',
+    sub: 'Building probabilistic systems for the problems where overconfidence has real consequences.',
+  },
+  { // 1 CITY
+    kicker: '§ 02 · Foundations',
+    headline: 'Structure in places that <em>resist</em> it.',
+    sub: 'Mathematics that does not respect disciplinary boundaries. Hospitals, supply chains, finance, social systems, all the same substrate.',
+  },
+  { // 2 TOWERS
+    kicker: '§ 03 · Scale',
+    headline: 'Two domains.<br>One <em>probabilistic</em> substrate.',
+    sub: 'A model that knows its own limits is not a weaker model. In high-stakes environments that distinction is everything.',
+  },
+  { // 3 NETWORK
+    kicker: '§ 04 · Transfer',
+    headline: 'A model that knows<br>its <em>own limits</em>.',
+    sub: 'Multi-agent systems sharing the same core challenge. The mathematics does not care about the domain.',
+  },
+  { // 4 BLOOM
+    kicker: '§ 05 · Aleatoric',
+    headline: 'The roll of a die.<br><em>Irreducible.</em>',
+    sub: 'From the Latin alea, the randomness that lives inside every complex system regardless of how much data you collect.',
+  },
+  { // 5 STRANDS
+    kicker: '§ 06 · Inference',
+    headline: 'Bayesian systems for<br><em>high-stakes</em> environments.',
+    sub: 'Where being honest about uncertainty is not a methodological nicety but an operational necessity.',
+  },
+  { // 6 DENSITY
+    kicker: '§ 07 · Now',
+    headline: 'Aleatoric Lab.<br><em>Founded</em> March 2026.',
+    sub: 'Currently live. New work follows. rameezis@aleatoriclab.com',
+  },
+];
+
+const segs = phaseBar ? phaseBar.querySelectorAll('.seg') : [];
+const phaseHeadlineEl = document.getElementById('phaseHeadline');
+const phKicker = document.getElementById('phKicker');
+const phHeadline = document.getElementById('phHeadline');
+const phSub = document.getElementById('phSub');
+
+let lastShownPhase = -1;
+let textSwapTimer = null;
+
+function setPhaseText(idx) {
+  const t = PHASE_TEXT[idx];
+  if (!t) return;
+  if (phKicker) phKicker.innerHTML = t.kicker;
+  phHeadline.innerHTML = t.headline;
+  phSub.innerHTML = t.sub;
+}
+
+function updatePhaseUI(t) {
+  let active = -1;
+  for (let i = 0; i < PHASES.length; i++) {
+    if (t >= PHASES[i].start && t < PHASES[i].end) { active = i; break; }
+  }
+  if (active === -1) active = PHASES.length - 1;
+  if (segs.length) segs.forEach((s, i) => s.classList.toggle('active', i <= active));
+  if (phaseLabel) phaseLabel.textContent = PHASES[active].name;
+  if (nodeCountEl) nodeCountEl.textContent = totalNodes.toLocaleString();
+
+  // Crossfade big headline when phase changes
+  if (active !== lastShownPhase) {
+    lastShownPhase = active;
+    // Fade out current
+    phaseHeadlineEl.classList.remove('show');
+    if (textSwapTimer) clearTimeout(textSwapTimer);
+    // After fade-out completes, swap content + fade back in
+    textSwapTimer = setTimeout(() => {
+      setPhaseText(active);
+      requestAnimationFrame(() => {
+        phaseHeadlineEl.classList.add('show');
+      });
+    }, 700); // matches kicker transition (~0.7s)
+  }
+}
+
+// Show first phase text immediately on load (don't wait for phase-change trigger)
+setPhaseText(0);
+requestAnimationFrame(() => {
+  phaseHeadlineEl.classList.add('show');
+  lastShownPhase = 0;
+});
+
+// ============================================================
+// Mouse / interaction
+// ============================================================
+let mouse = { x: 0, y: 0 };
+let mouseTarget = { x: 0, y: 0 };
+window.addEventListener('mousemove', (e) => {
+  mouseTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouseTarget.y = (e.clientY / window.innerHeight) * 2 - 1;
+});
+window.addEventListener('touchmove', (e) => {
+  if (!e.touches.length) return;
+  mouseTarget.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+  mouseTarget.y = (e.touches[0].clientY / window.innerHeight) * 2 - 1;
+}, { passive: true });
+
+let paused = false;
+if (pauseBtn) {
+  pauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Play' : 'Pause';
+  });
+}
+if (regenBtn) {
+  regenBtn.addEventListener('click', () => buildScene(Math.floor(Math.random() * 99999)));
+}
+
+// ============================================================
+// Resize
+// ============================================================
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  towerMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ============================================================
+// Strand & density layer fades — controlled from master timeline
+// ============================================================
+function updateOverlayLayers(t) {
+  // STRANDS layer: ramp in 92-102, hold, fade slightly 134-140
+  const strandsIn = smoothstep(92, 102, t);
+  const strandsOut = smoothstep(134, 140, t) * 0.5;
+  if (window._strandsFade) window._strandsFade(Math.max(0, strandsIn - strandsOut));
+
+  // DENSITY backdrop: ramp in 112-122
+  const densityIn = smoothstep(112, 122, t);
+  if (window._densityFade) window._densityFade(densityIn);
+}
+
+// ============================================================
+// Main loop
+// ============================================================
+let masterTime = 0;
+const clock = new THREE.Clock();
+
+function frame() {
+  const dt = clock.getDelta();
+  if (!paused) masterTime += dt;
+  if (masterTime > LOOP_DURATION) {
+    masterTime = 0;
+    buildScene(Math.floor(Math.random() * 99999));
+  }
+  const t = masterTime;
+
+  towerMat.uniforms.uTime.value = clock.elapsedTime;
+  vascularMat.uniforms.uTime.value = clock.elapsedTime;
+
+  mouse.x += (mouseTarget.x - mouse.x) * 0.04;
+  mouse.y += (mouseTarget.y - mouse.y) * 0.04;
+
+  updateCity(t);
+  updateGlobe(t, clock.elapsedTime);
+  updateTowers(t);
+  updateNetwork(t);
+  updateVascular(t);
+  updateCamera(t);
+  updateOverlayLayers(t);
+  updatePhaseUI(t);
+
+  if (vascularMesh) {
+    vascularMesh.rotation.y = clock.elapsedTime * 0.04;
+    vascularMesh.rotation.x = Math.sin(clock.elapsedTime * 0.03) * 0.08;
+  }
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+buildScene(Math.floor(Math.random() * 99999));
+frame();
+
+setTimeout(() => {
+  const l = document.getElementById('loader');
+  l.classList.add('hidden');
+  setTimeout(() => l.remove(), 900);
+}, 1400);
 </script>
 
-<hr>
-
-<h2>News</h2>
-<div class="news-item">
-  <span class="news-date">Mar 2026</span>
-  <span class="news-text">Abstract accepted for <strong>oral presentation</strong> at <strong>Synergy for Science 2026</strong>, Ethics and Innovation Forum, Scottish Event Campus, Glasgow, July 2026. Title: <em>Toward an open toolkit for interpretable machine learning: co-designing explainability with researchers across disciplines.</em></span>
-</div>
-<div class="news-item">
-  <span class="news-date">Mar 2026</span>
-  <span class="news-text">Aleatoric Lab founded at <a href="http://aleatoriclab.com">aleatoriclab.com</a></span>
-</div>
-
-<hr>
-
-<div style="border:1px solid #e0dff8;border-left:3px solid #1e2850;border-radius:6px;padding:14px 18px;background:#f7f6fe;font-size:13px;color:#444;margin-bottom:32px;">
-  This site is currently live and more updates will follow soon. For any queries or information reach out to <span style="color:#1e2850;font-weight:500;">rameezis&#64;aleatoriclab.com</span>
+</body>
+</html>
