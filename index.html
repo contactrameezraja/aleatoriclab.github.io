@@ -237,6 +237,63 @@
     to { transform: translateX(-100%); }
   }
 
+  /* ============ REPLAY UI — appears at end of cinematic ============ */
+  .replay-ui {
+    position: absolute;
+    left: 50%;
+    bottom: 80px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+    z-index: 14;
+  }
+  .replay-ui.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .replay-btn {
+    background: rgba(0, 0, 0, 0.55);
+    border: 0.5px solid rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.95);
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .replay-btn .ico {
+    font-size: 14px;
+    color: #ff2d6f;
+    text-shadow: 0 0 10px rgba(255, 45, 111, 0.7);
+    transition: transform 0.4s ease;
+  }
+  .replay-btn:hover {
+    background: rgba(255, 45, 111, 0.12);
+    border-color: rgba(255, 45, 111, 0.6);
+  }
+  #replayBtn:hover .ico {
+    transform: rotate(180deg);
+  }
+  #contactBtn:hover .ico {
+    transform: scale(1.15);
+  }
+  .replay-btn:active {
+    transform: scale(0.96);
+  }
+
   .phase-bar {
     position: absolute;
     top: 24px;
@@ -287,6 +344,8 @@
     .ticker { height: 38px; }
     .ticker-track { font-size: 12px; }
     .ticker-track .date { font-size: 11px; }
+    .replay-ui { bottom: 64px; gap: 8px; flex-direction: column; }
+    .replay-btn { padding: 10px 20px; font-size: 10px; }
   }
 </style>
 </head>
@@ -311,6 +370,18 @@
   <div class="phase-headline" id="phaseHeadline">
     <h2 id="phHeadline"></h2>
     <div class="sub" id="phSub"></div>
+  </div>
+
+  <!-- REPLAY UI — appears at end during CLOSE phase -->
+  <div class="replay-ui" id="replayUI">
+    <button class="replay-btn" id="replayBtn">
+      <span class="ico">↻</span>
+      Replay
+    </button>
+    <a class="replay-btn" id="contactBtn" href="mailto:rameezis@aleatoriclab.com">
+      <span class="ico">✉</span>
+      Get in touch
+    </a>
   </div>
 
   <!-- NEWS TICKER -->
@@ -595,8 +666,10 @@ const PHASES = [
   { name: 'BLOOM',   start: 72,  end: 92 },
   { name: 'STRANDS', start: 92,  end: 112 },
   { name: 'DENSITY', start: 112, end: 132 },
+  { name: 'CLOSE',   start: 132, end: 155 },
 ];
-const LOOP_DURATION = 140;
+const LOOP_DURATION = 155;
+const HOLD_AT_END = true;   // when true, scene pauses at end and shows replay UI
 
 function smoothstep(edge0, edge1, x) {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
@@ -643,10 +716,11 @@ function buildCity(seed) {
 }
 
 function updateCity(t) {
-  // City emerges 20-30, dims as more layers arrive
+  // City emerges 20-30, dims as more layers arrive, fades fully out during CLOSE
   const baseAppear = smoothstep(20, 30, t);
   const lateFade = 1 - smoothstep(36, 54, t) * 0.5 - smoothstep(92, 112, t) * 0.3;
-  const opacity = baseAppear * 0.28 * lateFade;
+  const closeFade = 1 - smoothstep(132, 142, t);
+  const opacity = baseAppear * 0.28 * lateFade * closeFade;
   cityLineMat.opacity = Math.max(0, opacity);
   cityGroundMat.opacity = Math.max(0, opacity * 0.25);
 }
@@ -828,8 +902,11 @@ function buildGalaxy() {
 }
 
 function updateGalaxy(t, elapsed) {
-  // Visible 0-20s, fades out 17-20
-  const visible = 1 - smoothstep(17, 20, t);
+  // Visible 0-20 (opening), fades out 17-20.
+  // Then fades BACK IN during CLOSE phase (135-145) for the cosmic return.
+  const openingVisible = 1 - smoothstep(17, 20, t);
+  const closingVisible = smoothstep(135, 145, t);
+  const visible = Math.max(openingVisible, closingVisible);
 
   if (galaxyMat) {
     galaxyMat.uniforms.uOpacity.value = visible;
@@ -994,9 +1071,11 @@ function buildTower({ x, z, width, depth, height, density, hueOffset, seed }) {
 function updateTowers(t) {
   const reveal = smoothstep(36, 48, t);
   towerMat.uniforms.uReveal.value = Math.max(reveal, 0.0001);
-  // Towers fade slightly in later phases so the strands/density read
+  // Towers fade slightly in later phases so the strands/density read,
+  // and fully out during CLOSE
   const lateFade = 1 - smoothstep(82, 92, t) * 0.3 - smoothstep(102, 112, t) * 0.3;
-  towerMat.uniforms.uOpacity.value = Math.max(0.2, lateFade);
+  const closeFade = 1 - smoothstep(132, 142, t);
+  towerMat.uniforms.uOpacity.value = Math.max(0, lateFade * closeFade);
 }
 
 // ============================================================
@@ -1072,9 +1151,11 @@ const connections = new Connections(60, 24);
 let nextSpawnTime = 54;
 
 function updateNetwork(t) {
-  // Connections active during phase 3 onward, fade gradually after phase 5
+  // Connections active during phase 3 onward, fade gradually after phase 5,
+  // and fully out during CLOSE
   const intensity = smoothstep(54, 62, t) * (1 - smoothstep(102, 122, t) * 0.7);
-  connections.material.opacity = Math.max(0, 0.5 + intensity * 0.4);
+  const closeFade = 1 - smoothstep(132, 142, t);
+  connections.material.opacity = Math.max(0, (0.5 + intensity * 0.4) * closeFade);
 
   const spawnInterval = 0.5 - intensity * 0.4;
   if (t >= nextSpawnTime && intensity > 0.05 && towerAAnchors.length > 0 && towerBAnchors.length > 0) {
@@ -1275,9 +1356,10 @@ vascularMat = new THREE.ShaderMaterial({
 function updateVascular(t) {
   const g = smoothstep(72, 92, t);
   vascularMat.uniforms.uGrowth.value = g;
-  // Vascular fades a bit when strands take over
+  // Vascular fades a bit when strands take over, then fully during CLOSE
   const strandsFade = 1 - smoothstep(102, 112, t) * 0.4;
-  vascularMat.uniforms.uOpacity.value = strandsFade;
+  const closeFade = 1 - smoothstep(132, 142, t);
+  vascularMat.uniforms.uOpacity.value = strandsFade * closeFade;
 }
 
 // ============================================================
@@ -1374,9 +1456,18 @@ function updateCamera(t) {
 
   // Blend genesis → city over 17–22s (galaxy fades 17–20, city emerges 20–30)
   const blend = smoothstep(17, 22, t);
-  camera.position.lerpVectors(genCamPos, cityCamPos, blend);
-  const lookAt = new THREE.Vector3().lerpVectors(genLookAt, cityLookAt, blend);
-  camera.lookAt(lookAt);
+  // CLOSE: blend back from city to genesis camera over 138–150s
+  const returnBlend = smoothstep(138, 150, t);
+
+  // Position: city → start, then back toward genesis pos at end
+  const liveCamPos = new THREE.Vector3().lerpVectors(genCamPos, cityCamPos, blend);
+  const finalCamPos = new THREE.Vector3().lerpVectors(liveCamPos, genCamPos, returnBlend);
+
+  const liveLookAt = new THREE.Vector3().lerpVectors(genLookAt, cityLookAt, blend);
+  const finalLookAt = new THREE.Vector3().lerpVectors(liveLookAt, genLookAt, returnBlend);
+
+  camera.position.copy(finalCamPos);
+  camera.lookAt(finalLookAt);
 }
 
 // ============================================================
@@ -1417,6 +1508,11 @@ const PHASE_TEXT = [
     kicker: '§ 07 · Now',
     headline: 'Aleatoric Lab.<br><em>Founded</em> March 2026.',
     sub: 'Currently live. New work follows. rameezis@aleatoriclab.com',
+  },
+  { // 7 CLOSE — return to cosmos
+    kicker: '§ 08 · Continuing',
+    headline: 'More to <em>follow</em>.',
+    sub: 'Stay tuned. New research, papers, and collaborations announced through 2026.',
   },
 ];
 
@@ -1471,6 +1567,43 @@ requestAnimationFrame(() => {
 });
 
 // ============================================================
+// Replay UI — fades in late in CLOSE phase
+// ============================================================
+const replayUIEl = document.getElementById('replayUI');
+const replayBtn = document.getElementById('replayBtn');
+
+let replayUIShown = false;
+function updateReplayUI(t) {
+  // Show replay UI when we're 145s+ into the timeline (deep in CLOSE)
+  const wantShow = t >= 145;
+  if (wantShow !== replayUIShown) {
+    replayUIShown = wantShow;
+    replayUIEl.classList.toggle('show', wantShow);
+  }
+}
+
+function restartScene() {
+  // Hide replay UI immediately
+  replayUIEl.classList.remove('show');
+  replayUIShown = false;
+  // Reset phase text tracker so phase 0 text re-shows
+  lastShownPhase = -1;
+  if (phaseHeadlineEl) phaseHeadlineEl.classList.remove('show');
+  // Rebuild with same seed (rebuild zeroes masterTime internally)
+  buildScene(currentSeed);
+  // After rebuild, re-show phase 0 text
+  setPhaseText(0);
+  requestAnimationFrame(() => {
+    if (phaseHeadlineEl) phaseHeadlineEl.classList.add('show');
+    lastShownPhase = 0;
+  });
+}
+
+if (replayBtn) {
+  replayBtn.addEventListener('click', () => restartScene());
+}
+
+// ============================================================
 // Mouse / interaction
 // ============================================================
 let mouse = { x: 0, y: 0 };
@@ -1512,14 +1645,15 @@ resize();
 // Strand & density layer fades — controlled from master timeline
 // ============================================================
 function updateOverlayLayers(t) {
-  // STRANDS layer: ramp in 92-102, hold, fade slightly 134-140
+  // STRANDS layer: ramp in 92-102, hold, fade out during CLOSE 132-142
   const strandsIn = smoothstep(92, 102, t);
-  const strandsOut = smoothstep(134, 140, t) * 0.5;
+  const strandsOut = smoothstep(132, 142, t);
   if (window._strandsFade) window._strandsFade(Math.max(0, strandsIn - strandsOut));
 
-  // DENSITY backdrop: ramp in 112-122
+  // DENSITY backdrop: ramp in 112-122, fade out during CLOSE 132-142
   const densityIn = smoothstep(112, 122, t);
-  if (window._densityFade) window._densityFade(densityIn);
+  const densityOut = smoothstep(132, 142, t);
+  if (window._densityFade) window._densityFade(Math.max(0, densityIn - densityOut));
 }
 
 // ============================================================
@@ -1532,8 +1666,13 @@ function frame() {
   const dt = clock.getDelta();
   if (!paused) masterTime += dt;
   if (masterTime > LOOP_DURATION) {
-    masterTime = 0;
-    buildScene(Math.floor(Math.random() * 99999));
+    if (HOLD_AT_END) {
+      // Pause at the end — replay UI already visible — wait for user input
+      masterTime = LOOP_DURATION;
+    } else {
+      masterTime = 0;
+      buildScene(Math.floor(Math.random() * 99999));
+    }
   }
   const t = masterTime;
 
@@ -1551,6 +1690,7 @@ function frame() {
   updateCamera(t);
   updateOverlayLayers(t);
   updatePhaseUI(t);
+  updateReplayUI(t);
 
   if (vascularMesh) {
     vascularMesh.rotation.y = clock.elapsedTime * 0.04;
