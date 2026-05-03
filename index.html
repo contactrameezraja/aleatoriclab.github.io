@@ -133,7 +133,7 @@
   .phase-headline {
     position: absolute;
     left: 36px;
-    bottom: 110px;          /* well clear of ticker + controls */
+    bottom: 70px;
     max-width: 760px;
     pointer-events: none;
     z-index: 11;
@@ -176,6 +176,7 @@
     opacity: 0;
     transform: translateY(14px);
     transition: opacity 0.9s ease 0.1s, transform 0.9s ease 0.1s, color 1.4s ease, text-shadow 1.4s ease;
+    text-wrap: balance;
   }
   .phase-headline h2 em {
     font-style: italic;
@@ -202,51 +203,6 @@
   .phase-headline.show .sub {
     opacity: 1;
     transform: translateY(0);
-  }
-
-  /* ============ NEWS TICKER (bottom strip) ============ */
-  .ticker {
-    position: absolute;
-    left: 0; right: 0;
-    bottom: 0;
-    height: 44px;
-    background: rgba(0, 0, 0, 0.75);
-    border-top: 0.5px solid rgba(255,255,255,0.18);
-    backdrop-filter: blur(10px);
-    overflow: hidden;
-    z-index: 13;
-    display: flex;
-    align-items: center;
-    pointer-events: none;
-    transition: background 1.4s ease, border-top-color 1.4s ease;
-  }
-  .ticker-track {
-    display: inline-block;
-    white-space: nowrap;
-    animation: tickerScroll 95s linear infinite;
-    padding-left: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    letter-spacing: 0;
-    color: rgba(255, 255, 255, 0.9);
-    transition: color 1.4s ease;
-  }
-  .ticker-track .item { margin: 0 32px; }
-  .ticker-track .date {
-    color: #ff2d6f;
-    margin-right: 10px;
-    font-weight: 500;
-    /* Date stays uppercase mono for visual contrast */
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .ticker-track .sep { color: rgba(255,255,255,0.35); margin: 0 18px; }
-  @keyframes tickerScroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-100%); }
   }
 
   /* ============ NAV: progress dots + prev/next arrows (top centre) ============ */
@@ -326,12 +282,11 @@
     background: rgba(255, 45, 111, 0.45);
   }
 
-  /* ============ REPLAY UI — appears at end of cinematic ============ */
+  /* ============ GET IN TOUCH BUTTON — appears at end of cinematic ============ */
   .replay-ui {
     position: absolute;
-    left: 50%;
-    bottom: 80px;
-    transform: translateX(-50%);
+    right: 36px;
+    bottom: 56px;
     display: flex;
     gap: 16px;
     pointer-events: none;
@@ -372,9 +327,6 @@
   .replay-btn:hover {
     background: rgba(255, 45, 111, 0.12);
     border-color: rgba(255, 45, 111, 0.6);
-  }
-  #replayBtn:hover .ico {
-    transform: rotate(180deg);
   }
   #contactBtn:hover .ico {
     transform: scale(1.15);
@@ -430,10 +382,7 @@
     .phase-headline { left: 16px; right: 16px; bottom: 80px; max-width: none; }
     .phase-headline h2 { font-size: 36px; }
     .phase-headline .sub { font-size: 11px; }
-    .ticker { height: 38px; }
-    .ticker-track { font-size: 12px; }
-    .ticker-track .date { font-size: 11px; }
-    .replay-ui { bottom: 64px; gap: 8px; flex-direction: column; }
+    .replay-ui { bottom: 24px; right: 16px; }
     .replay-btn { padding: 10px 20px; font-size: 10px; }
     /* On mobile, nav goes below the brand to avoid collision */
     .nav { top: 56px; gap: 8px; }
@@ -442,43 +391,13 @@
     .nav-dot { width: 6px; height: 6px; }
   }
 
-  /* ============ SCROLL HINT — appears at end of hero to nudge users down ============ */
-  .scroll-hint {
-    position: absolute;
-    left: 50%;
-    bottom: 120px;
-    transform: translateX(-50%);
-    z-index: 14;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    opacity: 0;
-    transition: opacity 1.4s ease;
-    pointer-events: none;
-    color: rgba(255, 255, 255, 0.55);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
-  .scroll-hint.show { opacity: 1; pointer-events: auto; cursor: pointer; }
-  .scroll-hint:hover { color: #ff2d6f; }
-  .scroll-hint .arrow {
-    font-size: 18px;
-    line-height: 1;
-    animation: scrollBounce 2s ease-in-out infinite;
-  }
-  @keyframes scrollBounce {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(6px); }
-  }
-
   /* ============ CONTENT SECTIONS (below the cinematic) ============ */
+  /* Light cream surface for comfortable long-form reading.
+     Cinematic above stays dark; this is the calm reading zone. */
   .content {
     position: relative;
-    background: #000;
-    color: rgba(255, 255, 255, 0.88);
+    background: #faf8f3;
+    color: #1a1a1a;
     z-index: 1;
   }
 
@@ -486,7 +405,7 @@
     max-width: 760px;
     margin: 0 auto;
     padding: 100px 32px;
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
   }
   .content section:last-of-type { border-bottom: none; }
 
@@ -497,8 +416,9 @@
     font-size: clamp(32px, 4.4vw, 54px);
     line-height: 1.05;
     letter-spacing: -0.015em;
-    color: #fff;
+    color: #1a1a1a;
     margin-bottom: 32px;
+    text-wrap: balance;
   }
   .content h2 em { font-style: italic; color: #ff2d6f; }
 
@@ -507,7 +427,7 @@
     font-size: 10px;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(0, 0, 0, 0.5);
     margin-bottom: 18px;
     display: flex;
     align-items: center;
@@ -518,21 +438,21 @@
     width: 6px; height: 6px;
     background: #ff2d6f;
     transform: rotate(45deg);
-    box-shadow: 0 0 6px rgba(255, 45, 111, 0.6);
+    box-shadow: 0 0 6px rgba(255, 45, 111, 0.4);
   }
 
   .content p {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.75;
-    color: rgba(255, 255, 255, 0.78);
+    color: rgba(0, 0, 0, 0.78);
     margin-bottom: 22px;
     font-weight: 300;
     text-align: justify;
     hyphens: auto;
   }
-  .content p strong { color: #fff; font-weight: 500; }
-  .content p em { font-style: italic; color: rgba(255, 45, 111, 0.95); }
+  .content p strong { color: #1a1a1a; font-weight: 500; }
+  .content p em { font-style: italic; color: #ff2d6f; }
 
   .content a {
     color: #ff2d6f;
@@ -542,7 +462,7 @@
   }
   .content a:hover { border-bottom-color: #ff2d6f; }
 
-  /* Keyword pills */
+  /* Keyword pills — light variant */
   .pills {
     display: flex;
     flex-wrap: wrap;
@@ -555,19 +475,19 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(255, 45, 111, 0.10);
-    border: 0.5px solid rgba(255, 45, 111, 0.35);
+    color: #1a1a1a;
+    background: rgba(255, 45, 111, 0.08);
+    border: 0.5px solid rgba(255, 45, 111, 0.4);
     border-radius: 999px;
   }
 
-  /* News list */
+  /* News list — light variant */
   .news-item {
     display: grid;
     grid-template-columns: 130px 1fr;
     gap: 24px;
     padding: 22px 0;
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
     font-family: 'Inter', sans-serif;
     font-size: 15px;
     line-height: 1.6;
@@ -581,51 +501,62 @@
     text-transform: uppercase;
     color: #ff2d6f;
     padding-top: 4px;
+    font-weight: 500;
   }
-  .news-text { color: rgba(255, 255, 255, 0.82); font-weight: 300; }
-  .news-text strong { color: #fff; font-weight: 500; }
-  .news-text em { font-style: italic; color: rgba(255, 255, 255, 0.65); }
+  .news-text { color: rgba(0, 0, 0, 0.78); font-weight: 300; }
+  .news-text strong { color: #1a1a1a; font-weight: 500; }
+  .news-text em { font-style: italic; color: rgba(0, 0, 0, 0.6); }
 
-  /* Contact card */
-  .contact-card {
-    background: linear-gradient(135deg, rgba(255, 45, 111, 0.08) 0%, rgba(255, 45, 111, 0.02) 100%);
-    border: 0.5px solid rgba(255, 45, 111, 0.3);
-    border-radius: 12px;
-    padding: 32px 36px;
-    margin-top: 16px;
-  }
-  .contact-card .label {
+  /* Send a message button — primary CTA at the end */
+  .send-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 32px;
+    padding: 18px 32px;
+    background: #1a1a1a;
+    color: #fff;
+    border: 0.5px solid #1a1a1a;
+    border-radius: 999px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.3em;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.15s ease, box-shadow 0.3s ease;
   }
-  .contact-card .email {
+  .send-btn .arrow {
     font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 18px;
     font-style: italic;
-    font-size: clamp(22px, 2.6vw, 32px);
-    color: #fff;
+    transition: transform 0.3s ease;
+    line-height: 1;
   }
-  .contact-card .email a {
+  .send-btn:hover {
+    background: #ff2d6f;
+    border-color: #ff2d6f;
     color: #fff;
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 24px rgba(255, 45, 111, 0.25);
   }
-  .contact-card .email a:hover {
-    color: #ff2d6f;
-    border-bottom-color: #ff2d6f;
+  .send-btn:hover .arrow {
+    transform: translateX(6px);
+  }
+  .send-btn:active {
+    transform: scale(0.98);
   }
 
-  /* Footer */
+  /* Footer — light variant */
   .footer {
     text-align: center;
     padding: 60px 32px 80px;
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(0, 0, 0, 0.4);
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
+    background: #faf8f3;
   }
   .footer .mark {
     display: inline-block; width: 6px; height: 6px;
@@ -633,16 +564,16 @@
     transform: rotate(45deg);
     margin-right: 8px;
     vertical-align: middle;
-    box-shadow: 0 0 8px rgba(255, 45, 111, 0.5);
+    box-shadow: 0 0 6px rgba(255, 45, 111, 0.4);
   }
 
   @media (max-width: 760px) {
     .content section { padding: 70px 24px; }
     .content h2 { font-size: 30px; }
-    .content p { font-size: 15px; }
+    .content p { font-size: 15px; text-align: left; }  /* mobile: left-align reads better */
     .news-item { grid-template-columns: 1fr; gap: 6px; }
     .news-date { padding-top: 0; }
-    .contact-card { padding: 24px; }
+    .send-btn { padding: 14px 24px; font-size: 11px; }
   }
 </style>
 </head>
@@ -679,43 +610,10 @@
 
     <!-- REPLAY UI — appears at end during CLOSE phase -->
     <div class="replay-ui" id="replayUI">
-      <button class="replay-btn" id="replayBtn">
-        <span class="ico">↻</span>
-        Replay
-      </button>
       <a class="replay-btn" id="contactBtn" href="mailto:rameezis@aleatoriclab.com">
         <span class="ico">✉</span>
         Get in touch
       </a>
-    </div>
-
-    <!-- SCROLL HINT — fades in during CLOSE to nudge user down -->
-    <a class="scroll-hint" id="scrollHint" href="#about">
-      <span>Scroll to read more</span>
-      <span class="arrow">↓</span>
-    </a>
-
-    <!-- NEWS TICKER -->
-    <div class="ticker">
-      <div class="ticker-track">
-        <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
-        <span class="sep">◆</span>
-        <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
-        <span class="sep">◆</span>
-        <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
-        <span class="sep">◆</span>
-        <span class="item">Toward an open toolkit for interpretable machine learning, co-designed with researchers across disciplines</span>
-        <span class="sep">◆</span>
-        <span class="item">Bayesian inference · Uncertainty quantification · Gaussian processes · Epistemic reasoning · Probabilistic ML · Statistical learning · Neurosymbolic AI</span>
-        <span class="sep">◆</span>
-        <span class="item">Enquiries · rameezis@aleatoriclab.com</span>
-        <span class="sep">◆</span>
-        <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
-        <span class="sep">◆</span>
-        <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
-        <span class="sep">◆</span>
-        <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
-      </div>
     </div>
   </div>
 </section>
@@ -750,7 +648,7 @@
 
   <section id="research">
     <div class="section-label">Research</div>
-    <h2>The mathematics of uncertainty<br>does not <em>respect</em> disciplines.</h2>
+    <h2>The mathematics of uncertainty does not <em>respect</em> disciplines.</h2>
     <p>
       Machine learning is at its most powerful not when it memorises patterns but when it generalises, when the same underlying structure surfaces across problems that look nothing like each other on the surface. The strength of probabilistic methods in particular lies in exactly this kind of transfer: the mathematics does not care whether you are modelling a hospital, a supply chain, or a social network.
     </p>
@@ -790,16 +688,14 @@
 
   <section id="contact">
     <div class="section-label">Get in touch</div>
-    <h2>Currently <em>live</em>.<br>New work follows.</h2>
+    <h2>Currently <em>live</em>. New work follows.</h2>
     <p>
       For research collaborations, consulting enquiries, or anything else, please get in touch directly.
     </p>
-    <div class="contact-card">
-      <div class="label">Email</div>
-      <div class="email">
-        <a href="mailto:rameezis@aleatoriclab.com">rameezis@aleatoriclab.com</a>
-      </div>
-    </div>
+    <a class="send-btn" href="mailto:rameezis@aleatoriclab.com?subject=Enquiry%20via%20aleatoriclab.com">
+      <span>Send a message</span>
+      <span class="arrow">→</span>
+    </a>
   </section>
 
   <div class="footer">
@@ -1882,7 +1778,7 @@ function updateCamera(t) {
 const PHASE_TEXT = [
   { // 0 GENESIS — your tagline opens the show on the white canvas
     kicker: 'Aleatoric Lab · Principled probabilistic ML',
-    headline: 'Let me show you where prediction <em>ends</em><br>and understanding <em>begins</em>.',
+    headline: 'Let me show you where prediction <em>ends</em> and understanding <em>begins</em>.',
     sub: 'Building probabilistic systems for the problems where overconfidence has real consequences.',
   },
   { // 1 CITY
@@ -1892,27 +1788,27 @@ const PHASE_TEXT = [
   },
   { // 2 TOWERS
     kicker: '§ 03 · Scale',
-    headline: 'Two domains.<br>One <em>probabilistic</em> substrate.',
+    headline: 'Two domains. One <em>probabilistic</em> substrate.',
     sub: 'A model that knows its own limits is not a weaker model. In high-stakes environments that distinction is everything.',
   },
   { // 3 NETWORK
     kicker: '§ 04 · Transfer',
-    headline: 'A model that knows<br>its <em>own limits</em>.',
+    headline: 'A model that knows its <em>own limits</em>.',
     sub: 'Multi-agent systems sharing the same core challenge. The mathematics does not care about the domain.',
   },
   { // 4 BLOOM
     kicker: '§ 05 · Aleatoric',
-    headline: 'The roll of a die.<br><em>Irreducible.</em>',
+    headline: 'The roll of a die. <em>Irreducible.</em>',
     sub: 'From the Latin alea, the randomness that lives inside every complex system regardless of how much data you collect.',
   },
   { // 5 STRANDS
     kicker: '§ 06 · Inference',
-    headline: 'Bayesian systems for<br><em>high-stakes</em> environments.',
+    headline: 'Bayesian systems for <em>high-stakes</em> environments.',
     sub: 'Where being honest about uncertainty is not a methodological nicety but an operational necessity.',
   },
   { // 6 DENSITY
     kicker: '§ 07 · Now',
-    headline: 'Aleatoric Lab.<br><em>Founded</em> March 2026.',
+    headline: 'Aleatoric Lab. <em>Founded</em> March 2026.',
     sub: 'Currently live. New work follows. rameezis@aleatoriclab.com',
   },
   { // 7 CLOSE — return to cosmos
@@ -2053,24 +1949,15 @@ window.addEventListener('keydown', (e) => {
 // Replay UI — fades in late in CLOSE phase
 // ============================================================
 const replayUIEl = document.getElementById('replayUI');
-const replayBtn = document.getElementById('replayBtn');
 
 let replayUIShown = false;
-const scrollHintEl = document.getElementById('scrollHint');
-let scrollHintShown = false;
 
 function updateReplayUI(t) {
-  // Show replay UI when we're 145s+ into the timeline (deep in CLOSE)
+  // Show "Get in touch" button when we're 145s+ into the timeline (deep in CLOSE)
   const wantShow = t >= 145;
   if (wantShow !== replayUIShown) {
     replayUIShown = wantShow;
     replayUIEl.classList.toggle('show', wantShow);
-  }
-  // Scroll hint shows slightly earlier so people see it before the buttons
-  const wantHint = t >= 142;
-  if (wantHint !== scrollHintShown) {
-    scrollHintShown = wantHint;
-    if (scrollHintEl) scrollHintEl.classList.toggle('show', wantHint);
   }
 }
 
@@ -2091,9 +1978,8 @@ function restartScene() {
   });
 }
 
-if (replayBtn) {
-  replayBtn.addEventListener('click', () => restartScene());
-}
+// Note: replay button was removed per feedback — only Get in touch remains.
+// The contact button is a plain mailto link with no JS needed.
 
 // ============================================================
 // Mouse / interaction
