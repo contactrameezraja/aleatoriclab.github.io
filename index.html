@@ -6,7 +6,7 @@
 <title>Aleatoric Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
@@ -14,16 +14,26 @@
     color: rgba(255,255,255,0.9);
     font-family: 'JetBrains Mono', monospace;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100%;
+  }
+  body { scroll-behavior: smooth; }
+
+  /* === HERO (cinematic) — first 100vh === */
+  .hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
     overflow: hidden;
-    height: 100%;
+    background: #000;
   }
 
-  #density { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
-  #gl      { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
-  #strands { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; pointer-events: none; }
+  #density { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  #gl      { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+  #strands { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; pointer-events: none; }
 
   .grain {
-    position: fixed; inset: 0;
+    position: absolute; inset: 0;
     pointer-events: none;
     z-index: 50;
     opacity: 0.05;
@@ -31,7 +41,7 @@
     background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 
-  .ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  .ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
   .ui > * { pointer-events: auto; }
 
   .brand {
@@ -107,7 +117,7 @@
 
   /* ============ DARK GRADIENT VIGNETTES so text always reads ============ */
   .vignette-bottom {
-    position: fixed;
+    position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 9;
@@ -431,6 +441,209 @@
     .nav-dots { padding: 6px 10px; gap: 6px; }
     .nav-dot { width: 6px; height: 6px; }
   }
+
+  /* ============ SCROLL HINT — appears at end of hero to nudge users down ============ */
+  .scroll-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 120px;
+    transform: translateX(-50%);
+    z-index: 14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+    pointer-events: none;
+    color: rgba(255, 255, 255, 0.55);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+  .scroll-hint.show { opacity: 1; pointer-events: auto; cursor: pointer; }
+  .scroll-hint:hover { color: #ff2d6f; }
+  .scroll-hint .arrow {
+    font-size: 18px;
+    line-height: 1;
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(6px); }
+  }
+
+  /* ============ CONTENT SECTIONS (below the cinematic) ============ */
+  .content {
+    position: relative;
+    background: #000;
+    color: rgba(255, 255, 255, 0.88);
+    z-index: 1;
+  }
+
+  .content section {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 100px 32px;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+  }
+  .content section:last-of-type { border-bottom: none; }
+
+  .content h2 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(32px, 4.4vw, 54px);
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    color: #fff;
+    margin-bottom: 32px;
+  }
+  .content h2 em { font-style: italic; color: #ff2d6f; }
+
+  .content .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .content .section-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #ff2d6f;
+    transform: rotate(45deg);
+    box-shadow: 0 0 6px rgba(255, 45, 111, 0.6);
+  }
+
+  .content p {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.78);
+    margin-bottom: 22px;
+    font-weight: 300;
+    text-align: justify;
+    hyphens: auto;
+  }
+  .content p strong { color: #fff; font-weight: 500; }
+  .content p em { font-style: italic; color: rgba(255, 45, 111, 0.95); }
+
+  .content a {
+    color: #ff2d6f;
+    text-decoration: none;
+    border-bottom: 0.5px solid rgba(255, 45, 111, 0.4);
+    transition: border-color 0.2s;
+  }
+  .content a:hover { border-bottom-color: #ff2d6f; }
+
+  /* Keyword pills */
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 32px;
+  }
+  .pills span {
+    display: inline-block;
+    padding: 6px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 45, 111, 0.10);
+    border: 0.5px solid rgba(255, 45, 111, 0.35);
+    border-radius: 999px;
+  }
+
+  /* News list */
+  .news-item {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 24px;
+    padding: 22px 0;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    align-items: start;
+  }
+  .news-item:last-child { border-bottom: none; }
+  .news-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #ff2d6f;
+    padding-top: 4px;
+  }
+  .news-text { color: rgba(255, 255, 255, 0.82); font-weight: 300; }
+  .news-text strong { color: #fff; font-weight: 500; }
+  .news-text em { font-style: italic; color: rgba(255, 255, 255, 0.65); }
+
+  /* Contact card */
+  .contact-card {
+    background: linear-gradient(135deg, rgba(255, 45, 111, 0.08) 0%, rgba(255, 45, 111, 0.02) 100%);
+    border: 0.5px solid rgba(255, 45, 111, 0.3);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-top: 16px;
+  }
+  .contact-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 12px;
+  }
+  .contact-card .email {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-size: clamp(22px, 2.6vw, 32px);
+    color: #fff;
+  }
+  .contact-card .email a {
+    color: #fff;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.4);
+  }
+  .contact-card .email a:hover {
+    color: #ff2d6f;
+    border-bottom-color: #ff2d6f;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 60px 32px 80px;
+    color: rgba(255, 255, 255, 0.35);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .footer .mark {
+    display: inline-block; width: 6px; height: 6px;
+    background: #ff2d6f;
+    transform: rotate(45deg);
+    margin-right: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 8px rgba(255, 45, 111, 0.5);
+  }
+
+  @media (max-width: 760px) {
+    .content section { padding: 70px 24px; }
+    .content h2 { font-size: 30px; }
+    .content p { font-size: 15px; }
+    .news-item { grid-template-columns: 1fr; gap: 6px; }
+    .news-date { padding-top: 0; }
+    .contact-card { padding: 24px; }
+  }
 </style>
 </head>
 <body>
@@ -439,64 +652,160 @@
   <div class="loader-bar"><div class="loader-bar-inner"></div></div>
 </div>
 
-<canvas id="density"></canvas>
-<canvas id="gl"></canvas>
-<canvas id="strands"></canvas>
-<div class="grain"></div>
+<section class="hero">
+  <canvas id="density"></canvas>
+  <canvas id="gl"></canvas>
+  <canvas id="strands"></canvas>
+  <div class="grain"></div>
 
-<!-- Dark gradient overlay so the headline reads no matter what's behind -->
-<div class="vignette-bottom"></div>
+  <!-- Dark gradient overlay so the headline reads no matter what's behind -->
+  <div class="vignette-bottom"></div>
 
-<div class="ui">
-  <div class="brand"><span class="mark"></span>aleatoric lab</div>
+  <div class="ui">
+    <div class="brand"><span class="mark"></span>aleatoric lab</div>
 
-  <!-- NAV: progress dots + prev/next arrows -->
-  <div class="nav" id="navUI">
-    <button class="nav-arrow" id="navPrev" aria-label="Previous scene">‹</button>
-    <div class="nav-dots" id="navDots"></div>
-    <button class="nav-arrow" id="navNext" aria-label="Next scene">›</button>
-  </div>
+    <!-- NAV: progress dots + prev/next arrows -->
+    <div class="nav" id="navUI">
+      <button class="nav-arrow" id="navPrev" aria-label="Previous scene">‹</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="nav-arrow" id="navNext" aria-label="Next scene">›</button>
+    </div>
 
-  <!-- THE BIG TEXT — single element, swaps content per phase with crossfade -->
-  <div class="phase-headline" id="phaseHeadline">
-    <h2 id="phHeadline"></h2>
-    <div class="sub" id="phSub"></div>
-  </div>
+    <!-- THE BIG TEXT — single element, swaps content per phase with crossfade -->
+    <div class="phase-headline" id="phaseHeadline">
+      <h2 id="phHeadline"></h2>
+      <div class="sub" id="phSub"></div>
+    </div>
 
-  <!-- REPLAY UI — appears at end during CLOSE phase -->
-  <div class="replay-ui" id="replayUI">
-    <button class="replay-btn" id="replayBtn">
-      <span class="ico">↻</span>
-      Replay
-    </button>
-    <a class="replay-btn" id="contactBtn" href="mailto:rameezis@aleatoriclab.com">
-      <span class="ico">✉</span>
-      Get in touch
+    <!-- REPLAY UI — appears at end during CLOSE phase -->
+    <div class="replay-ui" id="replayUI">
+      <button class="replay-btn" id="replayBtn">
+        <span class="ico">↻</span>
+        Replay
+      </button>
+      <a class="replay-btn" id="contactBtn" href="mailto:rameezis@aleatoriclab.com">
+        <span class="ico">✉</span>
+        Get in touch
+      </a>
+    </div>
+
+    <!-- SCROLL HINT — fades in during CLOSE to nudge user down -->
+    <a class="scroll-hint" id="scrollHint" href="#about">
+      <span>Scroll to read more</span>
+      <span class="arrow">↓</span>
     </a>
-  </div>
 
-  <!-- NEWS TICKER -->
-  <div class="ticker">
-    <div class="ticker-track">
-      <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
-      <span class="sep">◆</span>
-      <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
-      <span class="sep">◆</span>
-      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
-      <span class="sep">◆</span>
-      <span class="item">Toward an open toolkit for interpretable machine learning, co-designed with researchers across disciplines</span>
-      <span class="sep">◆</span>
-      <span class="item">Bayesian inference · Uncertainty quantification · Gaussian processes · Epistemic reasoning · Probabilistic ML · Statistical learning · Neurosymbolic AI</span>
-      <span class="sep">◆</span>
-      <span class="item">Enquiries · rameezis@aleatoriclab.com</span>
-      <span class="sep">◆</span>
-      <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
-      <span class="sep">◆</span>
-      <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
-      <span class="sep">◆</span>
-      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+    <!-- NEWS TICKER -->
+    <div class="ticker">
+      <div class="ticker-track">
+        <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
+        <span class="sep">◆</span>
+        <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
+        <span class="sep">◆</span>
+        <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+        <span class="sep">◆</span>
+        <span class="item">Toward an open toolkit for interpretable machine learning, co-designed with researchers across disciplines</span>
+        <span class="sep">◆</span>
+        <span class="item">Bayesian inference · Uncertainty quantification · Gaussian processes · Epistemic reasoning · Probabilistic ML · Statistical learning · Neurosymbolic AI</span>
+        <span class="sep">◆</span>
+        <span class="item">Enquiries · rameezis@aleatoriclab.com</span>
+        <span class="sep">◆</span>
+        <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
+        <span class="sep">◆</span>
+        <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
+        <span class="sep">◆</span>
+        <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+      </div>
     </div>
   </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CONTENT SECTIONS BELOW THE CINEMATIC                         -->
+<!-- ============================================================ -->
+<div class="content">
+
+  <section id="about">
+    <div class="section-label">About</div>
+    <h2>Finding structure in places that <em>resist</em> it.</h2>
+    <p>
+      Aleatoric Lab was created out of a fascination with finding structure in places that resist it, and finding honesty in systems that are usually rewarded for projecting confidence they do not have. What drives the work here is a particular kind of curiosity: the belief that understanding something properly means being willing to say exactly how much you do not know, and that the most useful models are not the ones that give you an answer but the ones that tell you how much to trust it.
+    </p>
+    <p>
+      The name comes from the Latin <em>alea</em>, meaning the roll of a die, and it refers specifically to <strong>aleatoric uncertainty</strong>, which is the irreducible randomness that lives inside every complex system regardless of how much data you collect or how sophisticated your methods become. What makes this idea compelling is that it does not belong to any single domain. It lives equally inside the decisions a hospital makes under resource pressure, inside a supply chain absorbing a geopolitical shock, inside a financial model being stress-tested against scenarios that have never happened before, and inside social systems trying to serve populations whose needs cannot be fully anticipated. The mathematics of irreducible uncertainty transfers across all of them, and what changes is only the domain knowledge you bring to bear on it.
+    </p>
+    <p>
+      At Aleatoric Lab we build <strong>probabilistic ML and Bayesian systems</strong> that take this seriously, developing methods and tools for the domains where being honest about uncertainty is not a methodological nicety but an operational necessity. Because a model that knows its own limits is not a weaker model, it is a more trustworthy one, and in high-stakes environments that distinction is everything.
+    </p>
+    <div class="pills">
+      <span>Bayesian Inference</span>
+      <span>Uncertainty Quantification</span>
+      <span>Gaussian Processes</span>
+      <span>Epistemic Reasoning</span>
+      <span>Probabilistic ML</span>
+      <span>Statistical Learning</span>
+      <span>Neurosymbolic AI</span>
+    </div>
+  </section>
+
+  <section id="research">
+    <div class="section-label">Research</div>
+    <h2>The mathematics of uncertainty<br>does not <em>respect</em> disciplines.</h2>
+    <p>
+      Machine learning is at its most powerful not when it memorises patterns but when it generalises, when the same underlying structure surfaces across problems that look nothing like each other on the surface. The strength of probabilistic methods in particular lies in exactly this kind of transfer: the mathematics does not care whether you are modelling a hospital, a supply chain, or a social network.
+    </p>
+    <p>
+      A Gaussian process modelling flood risk and one modelling misinformation credibility are solving the same mathematical problem. Multi-agent systems for supply chains and multi-agent systems for adversarial reasoning share the same core challenge. What connects the research areas at Aleatoric Lab is not the domain but the problem structure.
+    </p>
+    <p>
+      Current focus areas include <strong>Bayesian inference</strong> and <strong>Gaussian processes</strong> for prediction under uncertainty, <strong>causal and epistemic reasoning</strong> for robustness and stress-testing, and <strong>neurosymbolic methods</strong> for combining logical structure with probabilistic learning. Application domains span supply chain, financial systems, health and social policy, misinformation, disaster risk, and multi-agent systems.
+    </p>
+  </section>
+
+  <section id="news">
+    <div class="section-label">News</div>
+    <h2>What we are working on, <em>now</em>.</h2>
+
+    <div class="news-item">
+      <div class="news-date">Jul 2026</div>
+      <div class="news-text">
+        Paper accepted to <strong>ProbML 2026</strong> Workshop Track, co-located with ICML in Seoul. Title: <em>Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics.</em>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="news-date">Jul 2026</div>
+      <div class="news-text">
+        Abstract accepted for <strong>oral presentation</strong> at <strong>Synergy for Science 2026</strong>, Ethics and Innovation Forum, Scottish Event Campus, Glasgow. Title: <em>Toward an open toolkit for interpretable machine learning: co-designing explainability with researchers across disciplines.</em>
+      </div>
+    </div>
+
+    <div class="news-item">
+      <div class="news-date">Mar 2026</div>
+      <div class="news-text">
+        Aleatoric Lab founded. <a href="https://aleatoriclab.com">aleatoriclab.com</a> is live.
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="section-label">Get in touch</div>
+    <h2>Currently <em>live</em>.<br>New work follows.</h2>
+    <p>
+      For research collaborations, consulting enquiries, or anything else, please get in touch directly.
+    </p>
+    <div class="contact-card">
+      <div class="label">Email</div>
+      <div class="email">
+        <a href="mailto:rameezis@aleatoriclab.com">rameezis@aleatoriclab.com</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <span class="mark"></span> aleatoric lab · founded march 2026
+  </div>
+
 </div>
 
 <script type="importmap">
@@ -1747,12 +2056,21 @@ const replayUIEl = document.getElementById('replayUI');
 const replayBtn = document.getElementById('replayBtn');
 
 let replayUIShown = false;
+const scrollHintEl = document.getElementById('scrollHint');
+let scrollHintShown = false;
+
 function updateReplayUI(t) {
   // Show replay UI when we're 145s+ into the timeline (deep in CLOSE)
   const wantShow = t >= 145;
   if (wantShow !== replayUIShown) {
     replayUIShown = wantShow;
     replayUIEl.classList.toggle('show', wantShow);
+  }
+  // Scroll hint shows slightly earlier so people see it before the buttons
+  const wantHint = t >= 142;
+  if (wantHint !== scrollHintShown) {
+    scrollHintShown = wantHint;
+    if (scrollHintEl) scrollHintEl.classList.toggle('show', wantHint);
   }
 }
 
@@ -1836,6 +2154,17 @@ function updateOverlayLayers(t) {
 let masterTime = 0;
 const clock = new THREE.Clock();
 
+// Pause cinematic rendering when hero section is fully scrolled out of view.
+// Saves significant CPU/GPU when the user is reading the content below.
+let heroVisible = true;
+const heroEl = document.querySelector('.hero');
+if (heroEl && 'IntersectionObserver' in window) {
+  const heroObserver = new IntersectionObserver((entries) => {
+    heroVisible = entries[0].isIntersecting;
+  }, { threshold: 0.01 });
+  heroObserver.observe(heroEl);
+}
+
 function frame() {
   const dt = clock.getDelta();
   if (!paused) masterTime += dt;
@@ -1849,6 +2178,13 @@ function frame() {
     }
   }
   const t = masterTime;
+
+  // If hero is scrolled out of view, skip the heavy render but keep rAF going
+  // so we resume cleanly when user scrolls back up.
+  if (!heroVisible) {
+    requestAnimationFrame(frame);
+    return;
+  }
 
   towerMat.uniforms.uTime.value = clock.elapsedTime;
   vascularMat.uniforms.uTime.value = clock.elapsedTime;
