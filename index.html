@@ -169,8 +169,10 @@
   }
   .phase-headline h2 em {
     font-style: italic;
-    /* No more pink-on-bright issue — soft cream that reads on any background */
-    color: #ffd9c2;
+    color: #ff2d6f;
+    text-shadow:
+      0 2px 30px rgba(0,0,0,0.95),
+      0 0 18px rgba(0, 0, 0, 0.7);
     transition: color 1.4s ease;
   }
   .phase-headline .sub {
@@ -235,6 +237,83 @@
   @keyframes tickerScroll {
     from { transform: translateX(0); }
     to { transform: translateX(-100%); }
+  }
+
+  /* ============ NAV: progress dots + prev/next arrows (top centre) ============ */
+  .nav {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 14;
+    pointer-events: none;
+  }
+  .nav > * { pointer-events: auto; }
+
+  .nav-arrow {
+    background: rgba(0, 0, 0, 0.5);
+    border: 0.5px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 22px;
+    line-height: 1;
+    padding: 0 0 2px 0;     /* nudge glyph up to optical centre */
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-arrow:hover {
+    background: rgba(255, 45, 111, 0.18);
+    border-color: rgba(255, 45, 111, 0.65);
+    color: #fff;
+  }
+  .nav-arrow:active { transform: scale(0.92); }
+  .nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .nav-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.45);
+    border: 0.5px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 8px 14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .nav-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  .nav-dot:hover {
+    background: rgba(255, 255, 255, 0.55);
+    transform: scale(1.3);
+  }
+  .nav-dot.active {
+    background: #ff2d6f;
+    box-shadow: 0 0 10px rgba(255, 45, 111, 0.7);
+    transform: scale(1.25);
+  }
+  .nav-dot.passed {
+    background: rgba(255, 45, 111, 0.45);
   }
 
   /* ============ REPLAY UI — appears at end of cinematic ============ */
@@ -346,6 +425,11 @@
     .ticker-track .date { font-size: 11px; }
     .replay-ui { bottom: 64px; gap: 8px; flex-direction: column; }
     .replay-btn { padding: 10px 20px; font-size: 10px; }
+    /* On mobile, nav goes below the brand to avoid collision */
+    .nav { top: 56px; gap: 8px; }
+    .nav-arrow { width: 26px; height: 26px; font-size: 18px; }
+    .nav-dots { padding: 6px 10px; gap: 6px; }
+    .nav-dot { width: 6px; height: 6px; }
   }
 </style>
 </head>
@@ -365,6 +449,13 @@
 
 <div class="ui">
   <div class="brand"><span class="mark"></span>aleatoric lab</div>
+
+  <!-- NAV: progress dots + prev/next arrows -->
+  <div class="nav" id="navUI">
+    <button class="nav-arrow" id="navPrev" aria-label="Previous scene">‹</button>
+    <div class="nav-dots" id="navDots"></div>
+    <button class="nav-arrow" id="navNext" aria-label="Next scene">›</button>
+  </div>
 
   <!-- THE BIG TEXT — single element, swaps content per phase with crossfade -->
   <div class="phase-headline" id="phaseHeadline">
@@ -387,9 +478,11 @@
   <!-- NEWS TICKER -->
   <div class="ticker">
     <div class="ticker-track">
-      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+      <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
       <span class="sep">◆</span>
       <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
+      <span class="sep">◆</span>
+      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
       <span class="sep">◆</span>
       <span class="item">Toward an open toolkit for interpretable machine learning, co-designed with researchers across disciplines</span>
       <span class="sep">◆</span>
@@ -397,9 +490,11 @@
       <span class="sep">◆</span>
       <span class="item">Enquiries · rameezis@aleatoriclab.com</span>
       <span class="sep">◆</span>
-      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
+      <span class="item"><span class="date">JUL 2026</span>ProbML 2026 (co-located with ICML), Seoul. Paper accepted to Workshop Track. Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</span>
       <span class="sep">◆</span>
       <span class="item"><span class="date">JUL 2026</span>Synergy for Science. Ethics &amp; Innovation Forum, Glasgow. Oral presentation</span>
+      <span class="sep">◆</span>
+      <span class="item"><span class="date">MAR 2026</span>Aleatoric Lab founded. aleatoriclab.com is live</span>
     </div>
   </div>
 </div>
@@ -782,14 +877,16 @@ function buildGalaxy() {
     }
 
     // Each palette is wide so within-zone variety is high
+    // Warm side rebalanced from amber/yellow to pink/magenta/rose tones
+    // so it harmonises with the #ff2d6f brand pink
     const warm = [
-      [1.00, 0.78, 0.42],   // amber
-      [1.00, 0.62, 0.28],   // orange
-      [1.00, 0.85, 0.55],   // gold
-      [0.95, 0.45, 0.30],   // ember red
-      [1.00, 0.92, 0.70],   // pale gold-white
-      [1.00, 0.55, 0.20],   // deep amber
-      [1.00, 0.95, 0.85],   // near-white warm
+      [1.00, 0.18, 0.43],   // brand pink #ff2d6f
+      [1.00, 0.35, 0.55],   // hot rose
+      [0.95, 0.25, 0.50],   // ruby
+      [1.00, 0.50, 0.65],   // soft pink
+      [1.00, 0.65, 0.75],   // pale rose
+      [0.85, 0.20, 0.35],   // crimson
+      [1.00, 0.85, 0.88],   // near-white pink
     ];
     const mid = [
       [1.00, 0.40, 0.65],   // hot pink
@@ -1567,6 +1664,83 @@ requestAnimationFrame(() => {
 });
 
 // ============================================================
+// Nav UI — progress dots + prev/next arrows (top centre)
+// Lets users skip directly to any phase instead of waiting for the
+// 155-second linear timeline.
+// ============================================================
+const navDotsEl = document.getElementById('navDots');
+const navPrevEl = document.getElementById('navPrev');
+const navNextEl = document.getElementById('navNext');
+
+// Build dots from PHASES — one per phase
+const dotEls = [];
+PHASES.forEach((phase, i) => {
+  const d = document.createElement('button');
+  d.className = 'nav-dot';
+  d.setAttribute('aria-label', `Jump to ${phase.name}`);
+  d.title = phase.name;
+  d.addEventListener('click', () => jumpToPhase(i));
+  navDotsEl.appendChild(d);
+  dotEls.push(d);
+});
+
+function jumpToPhase(idx) {
+  if (idx < 0 || idx >= PHASES.length) return;
+  // Hide replay UI if visible (in case user is on close screen)
+  if (replayUIShown) {
+    replayUIEl.classList.remove('show');
+    replayUIShown = false;
+  }
+  // Move masterTime to the start of the target phase + a small offset
+  // (offset ensures we're inside the phase's text-display zone)
+  const target = PHASES[idx].start + 0.1;
+  masterTime = target;
+  // Force phase-text re-evaluation on next frame
+  // (don't reset lastShownPhase = -1 directly because that would re-fade
+  // the text even if we're already on this phase; updatePhaseUI handles it)
+}
+
+function getCurrentPhaseIndex(t) {
+  for (let i = 0; i < PHASES.length; i++) {
+    if (t >= PHASES[i].start && t < PHASES[i].end) return i;
+  }
+  return PHASES.length - 1;
+}
+
+function updateNavUI(t) {
+  const active = getCurrentPhaseIndex(t);
+  dotEls.forEach((dot, i) => {
+    dot.classList.toggle('active', i === active);
+    dot.classList.toggle('passed', i < active);
+  });
+  // Disable prev/next at edges
+  if (navPrevEl) navPrevEl.disabled = active === 0;
+  if (navNextEl) navNextEl.disabled = active === PHASES.length - 1;
+}
+
+if (navPrevEl) {
+  navPrevEl.addEventListener('click', () => {
+    const cur = getCurrentPhaseIndex(masterTime);
+    jumpToPhase(cur - 1);
+  });
+}
+if (navNextEl) {
+  navNextEl.addEventListener('click', () => {
+    const cur = getCurrentPhaseIndex(masterTime);
+    jumpToPhase(cur + 1);
+  });
+}
+
+// Keyboard shortcuts: ← → for prev/next
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' && navPrevEl && !navPrevEl.disabled) {
+    navPrevEl.click();
+  } else if (e.key === 'ArrowRight' && navNextEl && !navNextEl.disabled) {
+    navNextEl.click();
+  }
+});
+
+// ============================================================
 // Replay UI — fades in late in CLOSE phase
 // ============================================================
 const replayUIEl = document.getElementById('replayUI');
@@ -1690,6 +1864,7 @@ function frame() {
   updateCamera(t);
   updateOverlayLayers(t);
   updatePhaseUI(t);
+  updateNavUI(t);
   updateReplayUI(t);
 
   if (vascularMesh) {
