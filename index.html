@@ -1,2112 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aleatoric Lab</title>
+<meta name="description" content="Aleatoric Lab builds probabilistic ML and Bayesian systems for domains where being honest about uncertainty matters.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23fff'/%3E%3Crect x='3' y='3' width='58' height='58' fill='none' stroke='%23000' stroke-width='5'/%3E%3Crect x='37' y='37' width='24' height='24' fill='%23000'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+/* Play the logo intro only when scripts run and motion is welcome */
+(function(){
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!calm) document.documentElement.className += ' intro-on';
+})();
+</script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    background: #000;
-    color: rgba(255,255,255,0.9);
-    font-family: 'JetBrains Mono', monospace;
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-    min-height: 100%;
-  }
-  body { scroll-behavior: smooth; }
+:root{--bg:#fff;--ink:#000;--line:rgba(0,0,0,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{background:var(--bg);color:var(--ink);font-family:Inter,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:300;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration:none}
+em{font-style:normal}
+strong{font-weight:500}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
 
-  /* === HERO (cinematic) — first 100vh === */
-  .hero {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    background: #000;
-  }
+/* Header */
+header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:inline-flex;align-items:center;gap:12px;font-size:17px;font-weight:400;letter-spacing:.01em}
+.brand svg{display:block;width:24px;height:24px;flex:none}
+nav ul{display:flex;gap:10px;list-style:none;align-items:center}
+nav li a{font-size:13px;font-weight:400;padding:8px 8px}
+nav li a:hover{text-decoration:underline;text-underline-offset:5px}
+nav li.cta a{border:1px solid var(--ink);padding:8px 14px;border-radius:999px;font-weight:500}
+nav li.cta a:hover{background:var(--ink);color:var(--bg);text-decoration:none}
+@media(max-width:640px){nav li.link{display:none}.brand{font-size:16px}}
 
-  #density { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
-  #gl      { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
-  #strands { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; pointer-events: none; }
+/* Hero. Artwork at true size on black, with the text box banner over it. */
+.hero{position:relative;height:80svh;min-height:480px;background:#000;overflow:hidden}
+.hmedia{position:absolute;top:0;right:0;height:100%;aspect-ratio:1738/1730;max-width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 16%);mask-image:linear-gradient(to right,transparent 0,#000 16%)}
+.hmedia video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 1s ease}
+.hmedia video.on{opacity:1}
+.hmedia video.fit{object-fit:contain}
+.hero .credit{position:absolute;right:14px;bottom:10px;font-size:11px;font-weight:400;color:rgba(255,255,255,.85);letter-spacing:.03em;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.htext{position:absolute;left:max(24px,calc((100vw - 1120px)/2 + 24px));bottom:34px;width:min(540px,calc(100% - 48px))}
+.cards{display:grid}
+.scard{grid-area:1/1;align-self:end;padding:24px 26px 26px;background:rgba(255,255,255,.95);color:#000;opacity:0;transform:translateY(12px);transition:opacity .8s ease,transform .8s ease;pointer-events:none}
+.scard.on{opacity:1;transform:none;pointer-events:auto}
+.scard .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:10px}
+.scard h2{font-size:clamp(26px,3.4vw,40px);font-weight:300;letter-spacing:-.02em;line-height:1.06;max-width:none}
+.scard p{font-size:15px;margin-top:10px;max-width:44ch}
+.scard .sbtn{display:block;margin-top:18px;text-align:center;padding:13px 16px;border:1px solid #000;font-size:12px;letter-spacing:.1em;font-weight:500;text-transform:uppercase;transition:background .3s,color .3s}
+.scard .sbtn:hover{background:#000;color:#fff}
+.bars{display:flex;gap:6px;margin-top:8px}
+.bars button{flex:1;height:14px;background:none;border:0;padding:5px 0;cursor:pointer}
+.bars button span{display:block;height:3px;background:rgba(255,255,255,.35);overflow:hidden}
+.bars button i{display:block;height:100%;width:0;background:#fff}
+@media(max-width:820px){
+  .hero{height:auto;min-height:0;padding-top:calc(100vw * .9)}
+  .hmedia{left:0;right:0;height:auto;width:100%;aspect-ratio:1/1;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent);mask-image:linear-gradient(to bottom,#000 72%,transparent)}
+  .htext{position:relative;left:auto;bottom:auto;width:auto;margin:0 16px;padding-bottom:26px}
+  .scard{padding:18px 18px 20px}.scard p{font-size:14px}
+  .hero .credit{right:auto;left:16px;top:10px;bottom:auto;font-size:10px}
+}
 
-  .grain {
-    position: absolute; inset: 0;
-    pointer-events: none;
-    z-index: 50;
-    opacity: 0.05;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
+/* Intro block */
+.intro{padding:84px 0 80px}
+.intro .eyebrow{font-size:13px;font-weight:400;margin-bottom:22px}
+h1{font-weight:300;font-size:clamp(40px,6.4vw,82px);line-height:1.02;letter-spacing:-.03em;max-width:14ch;text-wrap:balance}
+.intro .lead{margin-top:36px}
+.prose p{font-size:clamp(16px,1.5vw,18px);max-width:64ch}
+.prose p+p{margin-top:16px}
+.pills{margin-top:38px;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%)}
+.pills .track{display:flex;width:max-content;animation:pillscroll 32s linear infinite}
+.pills:hover .track{animation-play-state:paused}
+.pills span{flex:none;margin-right:10px;font-size:14px;font-weight:400;border:1px solid var(--ink);border-radius:999px;padding:9px 18px;white-space:nowrap}
+@keyframes pillscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.pills{-webkit-mask-image:none;mask-image:none}.pills .track{animation:none;flex-wrap:wrap;width:auto;row-gap:8px}.pills span[aria-hidden]{display:none}}
 
-  .ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
-  .ui > * { pointer-events: auto; }
+/* Sections */
+section{padding:88px 0;border-top:1px solid var(--line)}
+.label{display:flex;align-items:baseline;gap:14px;margin-bottom:26px;font-size:13px}
+.label .n{font-weight:500}
+.label .t{font-weight:400}
+h2{font-weight:300;font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;max-width:20ch;text-wrap:balance}
+section .prose{margin-top:28px}
 
-  .brand {
-    position: absolute; top: 24px; left: 28px;
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    color: rgba(255,255,255,0.85);
-    text-transform: uppercase;
-    pointer-events: none;
-  }
-  .brand .mark {
-    display: inline-block; width: 6px; height: 6px;
-    background: #ff2d6f;
-    transform: rotate(45deg);
-    margin-right: 10px;
-    vertical-align: middle;
-    box-shadow: 0 0 10px #ff2d6f;
-  }
+.focus{margin-top:34px;border-top:1px solid var(--line)}
+.focus div{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:24px;padding:18px 0;border-bottom:1px solid var(--line);font-size:16px}
+.focus b{font-weight:500}
+.focus+p{margin-top:26px;font-size:clamp(16px,1.5vw,18px);max-width:64ch}
+@media(max-width:640px){.focus div{grid-template-columns:1fr;gap:2px}}
+.news{margin-top:34px;border-top:1px solid var(--line)}
+.item{display:grid;grid-template-columns:120px 1fr;gap:24px;padding:22px 0;border-bottom:1px solid var(--line)}
+.item .d{font-size:13px;font-weight:400;padding-top:3px}
+.item p{font-size:16px;max-width:66ch}
+.item .ttl{margin-top:6px;font-weight:400}
+@media(max-width:640px){.item{grid-template-columns:1fr;gap:6px}}
 
-  .coords {
-    position: absolute; top: 24px; right: 28px;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    color: rgba(255,255,255,0.5);
-    text-align: right;
-    line-height: 1.7;
-    text-transform: uppercase;
-    pointer-events: none;
-    z-index: 12;
-  }
-  .coords .v { color: rgba(255,255,255,0.9); }
+.btn{display:inline-flex;align-items:center;gap:8px;margin-top:30px;padding:13px 22px;border-radius:999px;font-size:14px;font-weight:500;border:1px solid var(--ink);background:var(--ink);color:var(--bg);transition:background .25s,color .25s}
+.btn:hover{background:var(--bg);color:var(--ink)}
+.mail{margin-top:18px;font-size:15px}
+.mail a{text-decoration:underline;text-underline-offset:4px;user-select:all}
 
-  .controls {
-    position: absolute; bottom: 56px; right: 28px;
-    display: flex; gap: 6px;
-    z-index: 13;
-  }
-  .pill {
-    background: rgba(0,0,0,0.55);
-    border: 0.5px solid rgba(255,255,255,0.3);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s;
-  }
-  .pill:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.55);
-  }
-  .pill:active { transform: scale(0.96); }
+footer{border-top:1px solid var(--line);padding:30px 0 44px;font-size:13px;font-weight:400}
+footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer .brand{font-size:13px;gap:10px}
+footer .brand svg{width:16px;height:16px}
 
-  .telemetry {
-    position: absolute; top: 60px; left: 28px;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: rgba(255,255,255,0.4);
-    text-transform: uppercase;
-    line-height: 1.7;
-    pointer-events: none;
-    z-index: 12;
-  }
-  .telemetry .v { color: rgba(255,255,255,0.75); }
-  .telemetry .phase {
-    color: #ff2d6f;
-    text-shadow: 0 0 8px rgba(255, 45, 111, 0.5);
-  }
-
-  /* ============ DARK GRADIENT VIGNETTES so text always reads ============ */
-  .vignette-bottom {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9;
-    background:
-      linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 25%, transparent 55%),
-      linear-gradient(to right, rgba(0,0,0,0.5) 0%, transparent 35%);
-    transition: opacity 1.4s ease;
-  }
-
-  /* ============ PHASE HEADLINE — the big centerpiece text ============ */
-  /* Lives left-of-centre, fills the lower 40% of the viewport.
-     Fades and slides in/out per phase. */
-  .phase-headline {
-    position: absolute;
-    left: 36px;
-    bottom: 70px;
-    max-width: 760px;
-    pointer-events: none;
-    z-index: 11;
-  }
-  .phase-headline .kicker {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.28em;
-    color: rgba(255, 255, 255, 0.8);
-    text-transform: uppercase;
-    margin-bottom: 22px;
-    text-shadow: 0 1px 12px rgba(0,0,0,0.9);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-  }
-  .phase-headline .kicker .dot {
-    width: 8px; height: 8px;
-    background: #ff2d6f;
-    border-radius: 50%;
-    box-shadow: 0 0 14px rgba(255, 45, 111, 0.8);
-    animation: pulseDot 1.6s ease-in-out infinite;
-  }
-  @keyframes pulseDot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.4; transform: scale(0.7); }
-  }
-  .phase-headline h2 {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-weight: 400;
-    font-size: clamp(40px, 6.5vw, 92px);
-    line-height: 0.98;
-    letter-spacing: -0.025em;
-    color: #fff;
-    text-shadow: 0 2px 30px rgba(0,0,0,0.85);
-    margin-bottom: 22px;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 0.9s ease 0.1s, transform 0.9s ease 0.1s, color 1.4s ease, text-shadow 1.4s ease;
-    text-wrap: balance;
-  }
-  .phase-headline h2 em {
-    font-style: italic;
-    color: #ff2d6f;
-    text-shadow:
-      0 2px 30px rgba(0,0,0,0.95),
-      0 0 18px rgba(0, 0, 0, 0.7);
-    transition: color 1.4s ease;
-  }
-  .phase-headline .sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(11px, 0.95vw, 14px);
-    line-height: 1.55;
-    letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.78);
-    max-width: 520px;
-    text-shadow: 0 1px 10px rgba(0,0,0,0.85);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.9s ease 0.25s, transform 0.9s ease 0.25s, color 1.4s ease, text-shadow 1.4s ease;
-  }
-  .phase-headline.show .kicker,
-  .phase-headline.show h2,
-  .phase-headline.show .sub {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* ============ NAV: progress dots + prev/next arrows (top centre) ============ */
-  .nav {
-    position: absolute;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    z-index: 14;
-    pointer-events: none;
-  }
-  .nav > * { pointer-events: auto; }
-
-  .nav-arrow {
-    background: rgba(0, 0, 0, 0.5);
-    border: 0.5px solid rgba(255, 255, 255, 0.25);
-    color: rgba(255, 255, 255, 0.85);
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-size: 22px;
-    line-height: 1;
-    padding: 0 0 2px 0;     /* nudge glyph up to optical centre */
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .nav-arrow:hover {
-    background: rgba(255, 45, 111, 0.18);
-    border-color: rgba(255, 45, 111, 0.65);
-    color: #fff;
-  }
-  .nav-arrow:active { transform: scale(0.92); }
-  .nav-arrow:disabled {
-    opacity: 0.3;
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .nav-dots {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.45);
-    border: 0.5px solid rgba(255, 255, 255, 0.18);
-    border-radius: 999px;
-    padding: 8px 14px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-  .nav-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.22);
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-  }
-  .nav-dot:hover {
-    background: rgba(255, 255, 255, 0.55);
-    transform: scale(1.3);
-  }
-  .nav-dot.active {
-    background: #ff2d6f;
-    box-shadow: 0 0 10px rgba(255, 45, 111, 0.7);
-    transform: scale(1.25);
-  }
-  .nav-dot.passed {
-    background: rgba(255, 45, 111, 0.45);
-  }
-
-  /* ============ GET IN TOUCH BUTTON — appears at end of cinematic ============ */
-  .replay-ui {
-    position: absolute;
-    right: 36px;
-    bottom: 56px;
-    display: flex;
-    gap: 16px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 1.4s ease;
-    z-index: 14;
-  }
-  .replay-ui.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .replay-btn {
-    background: rgba(0, 0, 0, 0.55);
-    border: 0.5px solid rgba(255, 255, 255, 0.35);
-    color: rgba(255, 255, 255, 0.95);
-    padding: 14px 28px;
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transition: background 0.25s ease, border-color 0.25s ease, transform 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .replay-btn .ico {
-    font-size: 14px;
-    color: #ff2d6f;
-    text-shadow: 0 0 10px rgba(255, 45, 111, 0.7);
-    transition: transform 0.4s ease;
-  }
-  .replay-btn:hover {
-    background: rgba(255, 45, 111, 0.12);
-    border-color: rgba(255, 45, 111, 0.6);
-  }
-  #contactBtn:hover .ico {
-    transform: scale(1.15);
-  }
-  .replay-btn:active {
-    transform: scale(0.96);
-  }
-
-  .phase-bar {
-    position: absolute;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 4px;
-    pointer-events: none;
-  }
-  .phase-bar .seg {
-    width: 22px; height: 2px;
-    background: rgba(255,255,255,0.2);
-    transition: background 0.4s;
-  }
-  .phase-bar .seg.active { background: #ff2d6f; box-shadow: 0 0 8px rgba(255, 45, 111, 0.6); }
-
-  .loader {
-    position: fixed; inset: 0;
-    background: #000;
-    z-index: 99999;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 0.8s;
-  }
-  .loader.hidden { opacity: 0; pointer-events: none; }
-  .loader-bar {
-    width: 200px; height: 1px;
-    background: rgba(255,255,255,0.15);
-    overflow: hidden;
-  }
-  .loader-bar-inner {
-    height: 100%; background: #ff2d6f;
-    transform-origin: left;
-    animation: load 1.4s ease-out forwards;
-  }
-  @keyframes load { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
-  /* ============ GENESIS-MODE TEXT INVERSION ============ */
-  /* (removed — page stays dark throughout) */
-
-  @media (max-width: 760px) {
-    .brand, .coords { font-size: 9px; }
-    .brand { top: 16px; left: 16px; }
-    .coords { top: 16px; right: 16px; }
-    .phase-headline { left: 16px; right: 16px; bottom: 80px; max-width: none; }
-    .phase-headline h2 { font-size: 36px; }
-    .phase-headline .sub { font-size: 11px; }
-    .replay-ui { bottom: 24px; right: 16px; }
-    .replay-btn { padding: 10px 20px; font-size: 10px; }
-    /* On mobile, nav goes below the brand to avoid collision */
-    .nav { top: 56px; gap: 8px; }
-    .nav-arrow { width: 26px; height: 26px; font-size: 18px; }
-    .nav-dots { padding: 6px 10px; gap: 6px; }
-    .nav-dot { width: 6px; height: 6px; }
-  }
-
-  /* ============ CONTENT SECTIONS (below the cinematic) ============ */
-  /* Light cream surface for comfortable long-form reading.
-     Cinematic above stays dark; this is the calm reading zone. */
-  .content {
-    position: relative;
-    background: #faf8f3;
-    color: #1a1a1a;
-    z-index: 1;
-  }
-
-  .content section {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 100px 32px;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-  }
-  .content section:last-of-type { border-bottom: none; }
-
-  .content h2 {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-style: italic;
-    font-weight: 400;
-    font-size: clamp(32px, 4.4vw, 54px);
-    line-height: 1.05;
-    letter-spacing: -0.015em;
-    color: #1a1a1a;
-    margin-bottom: 32px;
-    text-wrap: balance;
-  }
-  .content h2 em { font-style: italic; color: #ff2d6f; }
-
-  .content .section-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: rgba(0, 0, 0, 0.5);
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .content .section-label::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: #ff2d6f;
-    transform: rotate(45deg);
-    box-shadow: 0 0 6px rgba(255, 45, 111, 0.4);
-  }
-
-  .content p {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    font-size: 16px;
-    line-height: 1.75;
-    color: rgba(0, 0, 0, 0.78);
-    margin-bottom: 22px;
-    font-weight: 300;
-    text-align: justify;
-    hyphens: auto;
-  }
-  .content p strong { color: #1a1a1a; font-weight: 500; }
-  .content p em { font-style: italic; color: #ff2d6f; }
-
-  .content a {
-    color: #ff2d6f;
-    text-decoration: none;
-    border-bottom: 0.5px solid rgba(255, 45, 111, 0.4);
-    transition: border-color 0.2s;
-  }
-  .content a:hover { border-bottom-color: #ff2d6f; }
-
-  /* Keyword pills — light variant */
-  .pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 32px;
-  }
-  .pills span {
-    display: inline-block;
-    padding: 6px 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    color: #1a1a1a;
-    background: rgba(255, 45, 111, 0.08);
-    border: 0.5px solid rgba(255, 45, 111, 0.4);
-    border-radius: 999px;
-  }
-
-  /* News list — light variant */
-  .news-item {
-    display: grid;
-    grid-template-columns: 130px 1fr;
-    gap: 24px;
-    padding: 22px 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
-    align-items: start;
-  }
-  .news-item:last-child { border-bottom: none; }
-  .news-date {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #ff2d6f;
-    padding-top: 4px;
-    font-weight: 500;
-  }
-  .news-text { color: rgba(0, 0, 0, 0.78); font-weight: 300; }
-  .news-text strong { color: #1a1a1a; font-weight: 500; }
-  .news-text em { font-style: italic; color: rgba(0, 0, 0, 0.6); }
-
-  /* Send a message button — primary CTA at the end */
-  .send-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 32px;
-    padding: 18px 32px;
-    background: #1a1a1a;
-    color: #fff;
-    border: 0.5px solid #1a1a1a;
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.15s ease, box-shadow 0.3s ease;
-  }
-  .send-btn .arrow {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-size: 18px;
-    font-style: italic;
-    transition: transform 0.3s ease;
-    line-height: 1;
-  }
-  .send-btn:hover {
-    background: #ff2d6f;
-    border-color: #ff2d6f;
-    color: #fff;
-    box-shadow: 0 6px 24px rgba(255, 45, 111, 0.25);
-  }
-  .send-btn:hover .arrow {
-    transform: translateX(6px);
-  }
-  .send-btn:active {
-    transform: scale(0.98);
-  }
-
-  /* Footer — light variant */
-  .footer {
-    text-align: center;
-    padding: 60px 32px 80px;
-    color: rgba(0, 0, 0, 0.4);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    background: #faf8f3;
-  }
-  .footer .mark {
-    display: inline-block; width: 6px; height: 6px;
-    background: #ff2d6f;
-    transform: rotate(45deg);
-    margin-right: 8px;
-    vertical-align: middle;
-    box-shadow: 0 0 6px rgba(255, 45, 111, 0.4);
-  }
-
-  @media (max-width: 760px) {
-    .content section { padding: 70px 24px; }
-    .content h2 { font-size: 30px; }
-    .content p { font-size: 15px; text-align: left; }  /* mobile: left-align reads better */
-    .news-item { grid-template-columns: 1fr; gap: 6px; }
-    .news-date { padding-top: 0; }
-    .send-btn { padding: 14px 24px; font-size: 11px; }
-  }
+/* Logo intro. The mark waits in the middle, then travels to its corner. */
+#intro{display:none}
+.intro-on #intro{display:block;position:fixed;inset:0;z-index:100;background:#fff;transition:background-color .9s ease}
+.intro-on #intro.go{background-color:rgba(255,255,255,0);pointer-events:none}
+#introMark{position:fixed;left:50%;top:50%;width:104px;height:104px;margin:-52px 0 0 -52px;transform-origin:0 0;will-change:transform}
+#introMark svg{display:block;width:100%;height:100%;overflow:visible}
+#intro.go #introMark{transition:transform .95s cubic-bezier(.72,0,.18,1)}
+#introMark .frame{stroke-dasharray:232;stroke-dashoffset:232;animation:draw 1s cubic-bezier(.6,0,.2,1) .15s forwards}
+#introMark .fill{transform-box:fill-box;transform-origin:100% 100%;transform:scale(0);animation:pop .45s cubic-bezier(.3,1.3,.5,1) 1.05s forwards}
+#introBar{position:fixed;left:50%;top:calc(50% + 84px);width:104px;height:1px;margin-left:-52px;background:rgba(0,0,0,.15);overflow:hidden;transition:opacity .3s}
+#introBar i{display:block;height:100%;width:100%;background:#000;transform:scaleX(0);transform-origin:0 50%;animation:load 1.7s cubic-bezier(.4,0,.2,1) .1s forwards}
+#intro.go #introBar{opacity:0}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{to{transform:scale(1)}}
+@keyframes load{to{transform:scaleX(1)}}
+.intro-on body{overflow:hidden}
+.intro-on header .brand svg{visibility:hidden}
+.intro-on header .brand span,.intro-on nav,.intro-on main,.intro-on footer{opacity:0}
+.intro-on header{border-bottom-color:transparent}
+header .brand span,nav,main,footer{transition:opacity .9s ease}
+header{transition:border-color .9s ease}
 </style>
 </head>
 <body>
 
-<div class="loader" id="loader">
-  <div class="loader-bar"><div class="loader-bar-inner"></div></div>
+<div id="intro" aria-hidden="true">
+  <div id="introMark"><svg viewBox="0 0 64 64"><rect class="frame" x="3" y="3" width="58" height="58" fill="none" stroke="#000" stroke-width="5"/><rect class="fill" x="37" y="37" width="24" height="24" fill="#000"/></svg></div>
+  <div id="introBar"><i></i></div>
 </div>
 
-<section class="hero">
-  <canvas id="density"></canvas>
-  <canvas id="gl"></canvas>
-  <canvas id="strands"></canvas>
-  <div class="grain"></div>
+<header>
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Aleatoric Lab home"><svg id="mark" viewBox="0 0 64 64" aria-hidden="true"><rect x="3" y="3" width="58" height="58" fill="none" stroke="#000" stroke-width="5"/><rect x="37" y="37" width="24" height="24" fill="#000"/></svg><span>Aleatoric Lab</span></a>
+    <nav><ul>
+      <li class="link"><a href="#about">About</a></li>
+      <li class="link"><a href="#news">News</a></li>
+      <li class="cta"><a href="mailto:rameezis@aleatoriclab.com">Get in touch ↗</a></li>
+    </ul></nav>
+  </div>
+</header>
 
-  <!-- Dark gradient overlay so the headline reads no matter what's behind -->
-  <div class="vignette-bottom"></div>
+<main id="top">
 
-  <div class="ui">
-    <div class="brand"><span class="mark"></span>aleatoric lab</div>
-
-    <!-- NAV: progress dots + prev/next arrows -->
-    <div class="nav" id="navUI">
-      <button class="nav-arrow" id="navPrev" aria-label="Previous scene">‹</button>
-      <div class="nav-dots" id="navDots"></div>
-      <button class="nav-arrow" id="navNext" aria-label="Next scene">›</button>
+  <div class="hero">
+    <div class="hmedia">
+      <video class="on" autoplay muted loop playsinline preload="auto" poster="poster-brain.jpg"><source src="lab-brain.mp4" type="video/mp4"></video>
+      <video class="fit" muted loop playsinline preload="auto" poster="poster-sphere.jpg"><source src="lab-sphere.mp4" type="video/mp4"></video>
+      <video muted loop playsinline preload="auto" poster="poster-room.jpg"><source src="lab-room.mp4" type="video/mp4"></video>
+      <video muted loop playsinline preload="auto" poster="poster-space.jpg"><source src="lab-space.mp4" type="video/mp4"></video>
+      <div class="credit">Artworks by Refik Anadol Studio · Used with permission</div>
     </div>
-
-    <!-- THE BIG TEXT — single element, swaps content per phase with crossfade -->
-    <div class="phase-headline" id="phaseHeadline">
-      <h2 id="phHeadline"></h2>
-      <div class="sub" id="phSub"></div>
+    <div class="htext">
+    <div class="cards">
+    <div class="scard on">
+      <div class="eyebrow">Aleatoric Lab</div>
+      <h2>Models that tell you how much to trust them.</h2>
+      <p>An independent machine learning research lab, founded in 2026.</p>
+      <a href="#about" class="sbtn">Discover the lab</a>
     </div>
-
-    <!-- REPLAY UI — appears at end during CLOSE phase -->
-    <div class="replay-ui" id="replayUI">
-      <a class="replay-btn" id="contactBtn" href="mailto:rameezis@aleatoriclab.com">
-        <span class="ico">✉</span>
-        Get in touch
-      </a>
+    <div class="scard">
+      <div class="eyebrow">What we build</div>
+      <h2>Probabilistic ML and Bayesian systems.</h2>
+      <p>Methods and tools for decisions made under uncertainty.</p>
+      <a href="#about" class="sbtn">Research areas</a>
+    </div>
+    <div class="scard">
+      <div class="eyebrow">Where it applies</div>
+      <h2>One mathematics, many domains.</h2>
+      <p>Supply chains, finance, health, misinformation and disaster risk.</p>
+      <a href="#news" class="sbtn">Latest news</a>
+    </div>
+    <div class="scard">
+      <div class="eyebrow">Work with us</div>
+      <h2>Research collaborations and consulting.</h2>
+      <p>Bring us the problem where the uncertainty matters.</p>
+      <a href="mailto:rameezis@aleatoriclab.com?subject=Enquiry%20via%20aleatoriclab.com" class="sbtn">Get in touch</a>
+    </div>
+    </div>
+    <div class="bars" id="bars"></div>
     </div>
   </div>
-</section>
 
-<!-- ============================================================ -->
-<!-- CONTENT SECTIONS BELOW THE CINEMATIC                         -->
-<!-- ============================================================ -->
-<div class="content">
-
-  <section id="about">
-    <div class="section-label">About</div>
-    <h2>Finding structure in places that <em>resist</em> it.</h2>
-    <p>
-      Aleatoric Lab was created out of a fascination with finding structure in places that resist it, and finding honesty in systems that are usually rewarded for projecting confidence they do not have. What drives the work here is a particular kind of curiosity: the belief that understanding something properly means being willing to say exactly how much you do not know, and that the most useful models are not the ones that give you an answer but the ones that tell you how much to trust it.
-    </p>
-    <p>
-      The name comes from the Latin <em>alea</em>, meaning the roll of a die, and it refers specifically to <strong>aleatoric uncertainty</strong>, which is the irreducible randomness that lives inside every complex system regardless of how much data you collect or how sophisticated your methods become. What makes this idea compelling is that it does not belong to any single domain. It lives equally inside the decisions a hospital makes under resource pressure, inside a supply chain absorbing a geopolitical shock, inside a financial model being stress-tested against scenarios that have never happened before, and inside social systems trying to serve populations whose needs cannot be fully anticipated. The mathematics of irreducible uncertainty transfers across all of them, and what changes is only the domain knowledge you bring to bear on it.
-    </p>
-    <p>
-      At Aleatoric Lab we build <strong>probabilistic ML and Bayesian systems</strong> that take this seriously, developing methods and tools for the domains where being honest about uncertainty is not a methodological nicety but an operational necessity. Because a model that knows its own limits is not a weaker model, it is a more trustworthy one, and in high-stakes environments that distinction is everything.
-    </p>
-    <div class="pills">
-      <span>Bayesian Inference</span>
-      <span>Uncertainty Quantification</span>
-      <span>Gaussian Processes</span>
-      <span>Epistemic Reasoning</span>
-      <span>Probabilistic ML</span>
-      <span>Statistical Learning</span>
-      <span>Neurosymbolic AI</span>
+  <div class="intro" id="about">
+    <div class="wrap">
+      <div class="eyebrow">Probabilistic ML and Bayesian systems</div>
+      <h1>Finding structure in places that resist it.</h1>
+      <div class="prose lead">
+        <p>Aleatoric Lab builds <strong>probabilistic ML and Bayesian systems</strong>. The most useful models do not just give you an answer. They tell you how much to trust it.</p>
+        <p>The name comes from the Latin alea, the roll of a die. <strong>Aleatoric uncertainty</strong> is the randomness that stays inside a system however much data you collect. We build for the places where being honest about that is a necessity.</p>
+      </div>
+      <div class="pills" aria-label="Research areas"><div class="track"><span>Bayesian Inference</span><span>Uncertainty Quantification</span><span>Gaussian Processes</span><span>Epistemic Reasoning</span><span>Probabilistic ML</span><span>Statistical Learning</span><span>Neurosymbolic AI</span><span aria-hidden="true">Bayesian Inference</span><span aria-hidden="true">Uncertainty Quantification</span><span aria-hidden="true">Gaussian Processes</span><span aria-hidden="true">Epistemic Reasoning</span><span aria-hidden="true">Probabilistic ML</span><span aria-hidden="true">Statistical Learning</span><span aria-hidden="true">Neurosymbolic AI</span></div></div>
     </div>
-  </section>
-
-  <section id="research">
-    <div class="section-label">Research</div>
-    <h2>The mathematics of uncertainty does not <em>respect</em> disciplines.</h2>
-    <p>
-      Machine learning is at its most powerful not when it memorises patterns but when it generalises, when the same underlying structure surfaces across problems that look nothing like each other on the surface. The strength of probabilistic methods in particular lies in exactly this kind of transfer: the mathematics does not care whether you are modelling a hospital, a supply chain, or a social network.
-    </p>
-    <p>
-      A Gaussian process modelling flood risk and one modelling misinformation credibility are solving the same mathematical problem. Multi-agent systems for supply chains and multi-agent systems for adversarial reasoning share the same core challenge. What connects the research areas at Aleatoric Lab is not the domain but the problem structure.
-    </p>
-    <p>
-      Current focus areas include <strong>Bayesian inference</strong> and <strong>Gaussian processes</strong> for prediction under uncertainty, <strong>causal and epistemic reasoning</strong> for robustness and stress-testing, and <strong>neurosymbolic methods</strong> for combining logical structure with probabilistic learning. Application domains span supply chain, financial systems, health and social policy, misinformation, disaster risk, and multi-agent systems.
-    </p>
-  </section>
+  </div>
 
   <section id="news">
-    <div class="section-label">News</div>
-    <h2>What we are working on, <em>now</em>.</h2>
-
-    <div class="news-item">
-      <div class="news-date">Jul 2026</div>
-      <div class="news-text">
-        Paper accepted to <strong>ProbML 2026</strong> Workshop Track, co-located with ICML in Seoul. Title: <em>Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics.</em>
-      </div>
-    </div>
-
-    <div class="news-item">
-      <div class="news-date">Jul 2026</div>
-      <div class="news-text">
-        Abstract accepted for <strong>oral presentation</strong> at <strong>Synergy for Science 2026</strong>, Ethics and Innovation Forum, Scottish Event Campus, Glasgow. Title: <em>Toward an open toolkit for interpretable machine learning: co-designing explainability with researchers across disciplines.</em>
-      </div>
-    </div>
-
-    <div class="news-item">
-      <div class="news-date">Mar 2026</div>
-      <div class="news-text">
-        Aleatoric Lab founded. <a href="https://aleatoriclab.com">aleatoriclab.com</a> is live.
+    <div class="wrap">
+      <div class="label"><span class="n">[01]</span><span class="t">News</span></div>
+      <h2>What we are working on, now.</h2>
+      <div class="news">
+        <div class="item">
+          <div class="d">Sep 2026</div>
+          <div>
+            <p>Paper accepted as a <strong>poster</strong> at the <strong>MusIML Workshop at NeurIPS 2026</strong>.</p>
+            <p class="ttl">A null result on golden-ratio signatures in the vibrations of quasicrystal approximants, computed with machine-learned interatomic potentials</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="d">Jul 2026</div>
+          <div>
+            <p>Paper accepted to <strong>ProbML 2026</strong> Workshop Track, co-located with ICML in Seoul.</p>
+            <p class="ttl">Uniform Trajectory Bounds for Heavy-Tailed Stochastic Gradient Langevin Dynamics</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="d">Jul 2026</div>
+          <div>
+            <p>Abstract accepted for <strong>oral presentation</strong> at <strong>Synergy for Science 2026</strong>, Ethics and Innovation Forum, Scottish Event Campus, Glasgow.</p>
+            <p class="ttl">Toward an open toolkit for interpretable machine learning, co-designing explainability with researchers across disciplines</p>
+          </div>
+        </div>
+        <div class="item">
+          <div class="d">Mar 2026</div>
+          <div><p>Aleatoric Lab founded.</p></div>
+        </div>
       </div>
     </div>
   </section>
 
   <section id="contact">
-    <div class="section-label">Get in touch</div>
-    <h2>Currently <em>live</em>. New work follows.</h2>
-    <p>
-      For research collaborations, consulting enquiries, or anything else, please get in touch directly.
-    </p>
-    <a class="send-btn" href="mailto:rameezis@aleatoriclab.com?subject=Enquiry%20via%20aleatoriclab.com">
-      <span>Send a message</span>
-      <span class="arrow">→</span>
-    </a>
+    <div class="wrap">
+      <div class="label"><span class="n">[02]</span><span class="t">Get in touch</span></div>
+      <h2>Currently live. New work follows.</h2>
+      <div class="prose">
+        <p>For research collaborations, consulting enquiries, or anything else, please get in touch directly.</p>
+      </div>
+      <a class="btn" href="mailto:rameezis@aleatoriclab.com?subject=Enquiry%20via%20aleatoriclab.com">Send a message <span>→</span></a>
+      <p class="mail">Or email <a href="mailto:rameezis@aleatoriclab.com">rameezis@aleatoriclab.com</a></p>
+    </div>
   </section>
 
-  <div class="footer">
-    <span class="mark"></span> aleatoric lab · founded march 2026
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="3" y="3" width="58" height="58" fill="none" stroke="#000" stroke-width="5"/><rect x="37" y="37" width="24" height="24" fill="#000"/></svg><span>Aleatoric Lab · Founded March 2026</span></span>
+    <a href="#top">Back to top ↑</a>
   </div>
-
-</div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
-  }
-}
-</script>
+</footer>
 
 <script>
-// ============================================================
-// LAYER 0 — DENSITY CLOUDS (canvas2d, behind the 3D scene)
-// Slow purple/magenta gaussian blobs drifting horizontally.
-// Fades in during phase 6.
-// ============================================================
-(function() {
-  const cv = document.getElementById('density');
-  const ctx = cv.getContext('2d');
-  let W, H, dpr, blobs = [];
-  let opacity = 0;
+(function(){
+  var root = document.documentElement;
+  if(root.className.indexOf('intro-on') < 0) return;
+  var intro = document.getElementById('intro'),
+      big = document.getElementById('introMark'),
+      small = document.getElementById('mark'),
+      done = false, started = Date.now(), HOLD = 1900;
 
-  function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = window.innerWidth; H = window.innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  function finish(){
+    root.className = root.className.replace(/\s*intro-on/, '');
+    if(intro && intro.parentNode) intro.parentNode.removeChild(intro);
   }
-
-  function build() {
-    blobs = [];
-    for (let i = 0; i < 7; i++) {
-      blobs.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (0.15 + Math.random() * 0.4) * (Math.random() < 0.5 ? -1 : 1),
-        vy: (Math.random() - 0.5) * 0.1,
-        radius: 200 + Math.random() * 320,
-        hue: 280 + Math.random() * 50, // purple/magenta range
-        phase: Math.random() * Math.PI * 2,
-      });
-    }
+  function travel(){
+    if(done) return; done = true;
+    window.scrollTo(0, 0);
+    var a = big.getBoundingClientRect(), b = small.getBoundingClientRect();
+    var s = b.width / a.width;
+    intro.className = 'go';
+    big.style.transform = 'translate(' + (b.left - a.left) + 'px,' + (b.top - a.top) + 'px) scale(' + s + ')';
+    /* page fades in while the mark is on its way */
+    setTimeout(function(){ root.className += ' intro-reveal'; }, 720);
+    setTimeout(finish, 1050);
   }
+  function ready(){ setTimeout(travel, Math.max(0, HOLD - (Date.now() - started))); }
 
-  // Exposed setter so master timeline can fade us in
-  window._densityFade = (a) => { opacity = a; };
-
-  let frame = 0;
-  function step() {
-    frame++;
-    // Trail-fade clear so blobs leave soft tails
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.04 + (1 - opacity) * 0.2})`;
-    ctx.fillRect(0, 0, W, H);
-
-    if (opacity > 0.01) {
-      for (const b of blobs) {
-        b.x += b.vx;
-        b.y += b.vy + Math.sin(frame * 0.005 + b.phase) * 0.15;
-        if (b.x < -b.radius) b.x = W + b.radius;
-        if (b.x > W + b.radius) b.x = -b.radius;
-        if (b.y < -b.radius) b.y = H + b.radius;
-        if (b.y > H + b.radius) b.y = -b.radius;
-
-        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
-        grad.addColorStop(0, `hsla(${b.hue}, 80%, 55%, ${0.25 * opacity})`);
-        grad.addColorStop(0.5, `hsla(${b.hue}, 80%, 50%, ${0.08 * opacity})`);
-        grad.addColorStop(1, `hsla(${b.hue}, 80%, 50%, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    requestAnimationFrame(step);
-  }
-
-  window.addEventListener('resize', () => { resize(); build(); });
-  resize(); build(); step();
-  window._densityRebuild = build;
+  if(document.readyState === 'complete') ready(); else window.addEventListener('load', ready);
+  setTimeout(travel, 4500);            /* never wait longer than this */
+  intro.addEventListener('click', travel);  /* tap to skip */
 })();
 </script>
-
 <script>
-// ============================================================
-// LAYER 2 — SWIRLING STRANDS (canvas2d on top of 3D)
-// Anadol-style flow strands sweeping across the screen as a
-// translucent veil. Curl-noise field + tangential swirl.
-// Activates during phase 5; fades partially in phase 6.
-// ============================================================
-(function() {
-  const cv = document.getElementById('strands');
-  const ctx = cv.getContext('2d');
-  let W, H, dpr;
-  let particles = [];
-  let opacity = 0;
-  let frame = 0;
-
-  function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = window.innerWidth; H = window.innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-
-  function hash2(x, y) {
-    let h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-    return (h - Math.floor(h)) * 2 - 1;
-  }
-  function smoothNoise(x, y) {
-    const xi = Math.floor(x), yi = Math.floor(y);
-    const xf = x - xi, yf = y - yi;
-    const u = xf * xf * (3 - 2 * xf);
-    const v = yf * yf * (3 - 2 * yf);
-    const a = hash2(xi, yi), b = hash2(xi + 1, yi);
-    const c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
-    return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
-  }
-
-  const palettes = [
-    [[255, 50, 200], [80, 220, 255], [180, 80, 255], [255, 200, 60], [255, 80, 120]],
-    [[80, 255, 180], [255, 100, 220], [255, 220, 80], [120, 100, 255], [50, 200, 255]],
-  ];
-  let palette = palettes[0];
-
-  function build() {
-    palette = palettes[Math.floor(Math.random() * palettes.length)];
-    particles = [];
-    const N = 1100;
-    const cx = W * 0.5, cy = H * 0.5;
-    const sculptureR = Math.min(W, H) * 0.45;
-    for (let i = 0; i < N; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const r = Math.pow(Math.random(), 1.4) * sculptureR;
-      const x = cx + Math.cos(a) * r;
-      const y = cy + Math.sin(a) * r * 0.85;
-      const c = palette[Math.floor(Math.random() * palette.length)];
-      particles.push({
-        x, y, px: x, py: y,
-        vx: 0, vy: 0,
-        life: Math.random() * 200,
-        maxLife: 250 + Math.random() * 500,
-        r: c[0] + (Math.random() - 0.5) * 50,
-        g: c[1] + (Math.random() - 0.5) * 50,
-        b: c[2] + (Math.random() - 0.5) * 50,
-        thickness: 0.4 + Math.random() * 1.4,
-        alpha: 0.18 + Math.random() * 0.35,
-        homeX: x, homeY: y,
-      });
+(function(){
+  var cards=[].slice.call(document.querySelectorAll('.scard')), bars=document.getElementById('bars'),
+      DUR=12000, n=cards.length, cur=0, t0=null, fills=[], vids=[].slice.call(document.querySelectorAll('.hmedia video'));
+  function scene(i){var k=i%vids.length; vids.forEach(function(v,j){ if(j===k){ if(v.className.indexOf('on')<0){ try{v.currentTime=0}catch(e){} v.className+=' on'; } var p=v.play(); if(p&&p.catch)p.catch(function(){}); } else { v.className=v.className.replace(/\s*\bon\b/,''); setTimeout(function(){ if(v.className.indexOf('on')<0) v.pause(); },1100); } }); }
+  cards.forEach(function(c,i){
+    var b=document.createElement('button'); b.setAttribute('aria-label','Scene '+(i+1));
+    b.innerHTML='<span><i></i></span>'; b.onclick=function(){go(i)}; bars.appendChild(b); fills.push(b.querySelector('i'));
+  });
+  function go(i){cur=i; t0=null; scene(i); cards.forEach(function(c,k){c.className='scard'+(k===i?' on':'')}); fills.forEach(function(f,k){f.style.width=k<i?'100%':'0'});}
+  function tick(ts){
+    if(document.documentElement.className.indexOf('intro-on')<0 || document.documentElement.className.indexOf('intro-reveal')>=0){
+      if(t0===null) t0=ts;
+      var p=(ts-t0)/DUR;
+      if(p>=1){ go((cur+1)%n); p=0; }
+      fills[cur].style.width=(p*100)+'%';
     }
+    requestAnimationFrame(tick);
   }
-
-  window._strandsFade = (a) => { opacity = a; };
-  window._strandsRebuild = build;
-
-  function step() {
-    frame++;
-
-    // If invisible, just sleep
-    if (opacity < 0.01) {
-      ctx.clearRect(0, 0, W, H);
-      requestAnimationFrame(step);
-      return;
-    }
-
-    // Trail fade — softer when opacity is low so we don't accumulate junk
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.025 + (1 - opacity) * 0.05})`;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.globalCompositeOperation = 'lighter';
-    const t = frame * 0.003;
-    const fieldScale = 0.0035;
-
-    for (const p of particles) {
-      const e = 0.01;
-      const n1 = smoothNoise(p.x * fieldScale, p.y * fieldScale + e + t * 0.5);
-      const n2 = smoothNoise(p.x * fieldScale, p.y * fieldScale - e + t * 0.5);
-      const n3 = smoothNoise(p.x * fieldScale + e, p.y * fieldScale + t * 0.5);
-      const n4 = smoothNoise(p.x * fieldScale - e, p.y * fieldScale + t * 0.5);
-      const cx_ = (n1 - n2) / (2 * e);
-      const cy_ = -(n3 - n4) / (2 * e);
-
-      const dx = p.x - W * 0.5;
-      const dy = p.y - H * 0.5;
-      const dist = Math.sqrt(dx * dx + dy * dy) + 1;
-      const swirlX = -dy / dist * 0.45;
-      const swirlY = dx / dist * 0.45;
-      const homeX = (p.homeX - p.x) * 0.0008;
-      const homeY = (p.homeY - p.y) * 0.0008;
-
-      p.vx = p.vx * 0.92 + cx_ * 0.5 + swirlX + homeX;
-      p.vy = p.vy * 0.92 + cy_ * 0.5 + swirlY + homeY;
-
-      p.px = p.x; p.py = p.y;
-      p.x += p.vx;
-      p.y += p.vy;
-
-      ctx.strokeStyle = `rgba(${p.r|0}, ${p.g|0}, ${p.b|0}, ${p.alpha * opacity})`;
-      ctx.lineWidth = p.thickness;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(p.px, p.py);
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-
-      p.life++;
-      if (p.life > p.maxLife || p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
-        const a = Math.random() * Math.PI * 2;
-        const r = Math.pow(Math.random(), 1.4) * Math.min(W, H) * 0.45;
-        p.x = W * 0.5 + Math.cos(a) * r;
-        p.y = H * 0.5 + Math.sin(a) * r * 0.85;
-        p.px = p.x; p.py = p.y;
-        p.vx = 0; p.vy = 0;
-        p.homeX = p.x; p.homeY = p.y;
-        p.life = 0;
-      }
-    }
-
-    ctx.globalCompositeOperation = 'source-over';
-    requestAnimationFrame(step);
-  }
-
-  window.addEventListener('resize', () => { resize(); build(); });
-  resize(); build(); step();
+  requestAnimationFrame(tick);
 })();
 </script>
-
-<script type="module">
-import * as THREE from 'three';
-
-// ============================================================
-// 6-PHASE CINEMATIC TIMELINE
-// 1. CITY     0-6s
-// 2. TOWERS   6-14s
-// 3. NETWORK  14-22s
-// 4. BLOOM    22-32s
-// 5. STRANDS  32-42s   (canvas overlay fades in)
-// 6. DENSITY  42-52s   (canvas backdrop fades in)
-// Hold all 52-60s, then loop with new seed.
-// ============================================================
-const canvas = document.getElementById('gl');
-const seedVal = document.getElementById('seedVal');           // may be null now
-const nodeCountEl = document.getElementById('nodeCount');     // may be null
-const phaseLabel = document.getElementById('phaseLabel');     // may be null
-const phaseBar = document.getElementById('phaseBar');         // may be null
-const pauseBtn = document.getElementById('pauseBtn');         // may be null
-const regenBtn = document.getElementById('regenBtn');         // may be null
-
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x000000, 0); // transparent so density layer shows through
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000000, 0.014);
-
-const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-const PHASES = [
-  { name: 'GENESIS', start: 0,   end: 20 },
-  { name: 'CITY',    start: 20,  end: 36 },
-  { name: 'TOWERS',  start: 36,  end: 54 },
-  { name: 'NETWORK', start: 54,  end: 72 },
-  { name: 'BLOOM',   start: 72,  end: 92 },
-  { name: 'STRANDS', start: 92,  end: 112 },
-  { name: 'DENSITY', start: 112, end: 132 },
-  { name: 'CLOSE',   start: 132, end: 155 },
-];
-const LOOP_DURATION = 155;
-const HOLD_AT_END = true;   // when true, scene pauses at end and shows replay UI
-
-function smoothstep(edge0, edge1, x) {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
-// ============================================================
-// CITY
-// ============================================================
-let cityGroup, cityLineMat, cityGroundMat;
-function buildCity(seed) {
-  const group = new THREE.Group();
-  cityLineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
-  cityGroundMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
-
-  let s = seed | 0;
-  const rand = () => {
-    s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-
-  for (let i = 0; i < 130; i++) {
-    const x = (rand() - 0.5) * 80;
-    const z = (rand() - 0.5) * 70;
-    if (Math.abs(x) < 6 && Math.abs(z) < 6) continue;
-    const w = 0.8 + rand() * 4;
-    const d = 0.8 + rand() * 4;
-    const h = 0.3 + rand() * (rand() < 0.18 ? 14 : 4);
-    const geo = new THREE.BoxGeometry(w, h, d);
-    const edges = new THREE.EdgesGeometry(geo);
-    const line = new THREE.LineSegments(edges, cityLineMat);
-    line.position.set(x, h / 2, z);
-    group.add(line);
-    geo.dispose();
-  }
-  const planeGeo = new THREE.PlaneGeometry(100, 100, 40, 40);
-  const planeWire = new THREE.LineSegments(new THREE.WireframeGeometry(planeGeo), cityGroundMat);
-  planeWire.rotation.x = -Math.PI / 2;
-  group.add(planeWire);
-  planeGeo.dispose();
-  return group;
-}
-
-function updateCity(t) {
-  // City emerges 20-30, dims as more layers arrive, fades fully out during CLOSE
-  const baseAppear = smoothstep(20, 30, t);
-  const lateFade = 1 - smoothstep(36, 54, t) * 0.5 - smoothstep(92, 112, t) * 0.3;
-  const closeFade = 1 - smoothstep(132, 142, t);
-  const opacity = baseAppear * 0.28 * lateFade * closeFade;
-  cityLineMat.opacity = Math.max(0, opacity);
-  cityGroundMat.opacity = Math.max(0, opacity * 0.25);
-}
-
-// ============================================================
-// GALAXY — opening visual (phase 0: GENESIS, 0–10s)
-// A volumetric particle field — thousands of stars filling 3D space,
-// banded into three colour zones (warm amber, deep blue, magenta/pink
-// transition) like staring into a section of the night sky / a galaxy.
-// Slow rotation, per-particle twinkle.
-// ============================================================
-let galaxyGroup, galaxyMat;
-const GALAXY_CENTRE = new THREE.Vector3(0, 12, 0);
-
-function buildGalaxy() {
-  if (galaxyGroup) {
-    scene.remove(galaxyGroup);
-    galaxyGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-  }
-  galaxyGroup = new THREE.Group();
-  galaxyGroup.position.copy(GALAXY_CENTRE);
-  scene.add(galaxyGroup);
-
-  // Reference image: dense uniform mat of pinprick dots, three colour zones
-  // bleeding across X (warm amber → magenta → deep blue), each pinprick its
-  // own hue. Sparkle in place rather than drift.
-  const COUNT = 60000;          // dense mat, not a cloud
-  const positions = new Float32Array(COUNT * 3);
-  const colours   = new Float32Array(COUNT * 3);
-  const sizes     = new Float32Array(COUNT);
-  const tw        = new Float32Array(COUNT);
-
-  // Fill a wide slab uniformly — no Gaussian clumping, no diagonal ridge.
-  // We want even density across the frame.
-  const SLAB_W = 80;
-  const SLAB_H = 50;
-  const SLAB_D = 14;     // shallow depth so all particles read at similar size
-
-  // Hue strategy: a smooth horizontal gradient from warm-left to cool-right,
-  // BUT each individual particle picks from a palette near its position so
-  // colours visibly mix at every point. That's what gives the reference its
-  // "yellow grain next to red grain next to white" texture.
-
-  function hueForX(xNorm, jitter) {
-    // xNorm in [-1, 1]
-    // We pick from one of three palettes by zone, but with bleed into neighbours
-    // so adjacent particles can be from different palettes.
-
-    // bleed: 35% chance to pick from a neighbouring zone's palette
-    let zone;
-    const r = Math.random();
-    if (xNorm < -0.33) {
-      zone = (r < 0.7) ? 'warm' : (r < 0.95 ? 'mid' : 'cool');
-    } else if (xNorm > 0.33) {
-      zone = (r < 0.7) ? 'cool' : (r < 0.95 ? 'mid' : 'warm');
-    } else {
-      // middle zone: roughly evenly mixed pink/red/blue
-      zone = (r < 0.4) ? 'mid' : (r < 0.7 ? 'warm' : 'cool');
-    }
-
-    // Each palette is wide so within-zone variety is high
-    // Warm side rebalanced from amber/yellow to pink/magenta/rose tones
-    // so it harmonises with the #ff2d6f brand pink
-    const warm = [
-      [1.00, 0.18, 0.43],   // brand pink #ff2d6f
-      [1.00, 0.35, 0.55],   // hot rose
-      [0.95, 0.25, 0.50],   // ruby
-      [1.00, 0.50, 0.65],   // soft pink
-      [1.00, 0.65, 0.75],   // pale rose
-      [0.85, 0.20, 0.35],   // crimson
-      [1.00, 0.85, 0.88],   // near-white pink
-    ];
-    const mid = [
-      [1.00, 0.40, 0.65],   // hot pink
-      [0.85, 0.30, 0.75],   // magenta
-      [0.95, 0.55, 0.75],   // dusty pink
-      [0.70, 0.40, 0.95],   // light violet
-      [1.00, 0.65, 0.80],   // peach pink
-      [0.95, 0.95, 0.95],   // white
-    ];
-    const cool = [
-      [0.20, 0.35, 1.00],   // royal blue
-      [0.35, 0.50, 1.00],   // periwinkle
-      [0.50, 0.70, 1.00],   // sky blue
-      [0.55, 0.40, 1.00],   // violet-blue
-      [0.85, 0.92, 1.00],   // pale blue-white
-      [0.15, 0.25, 0.95],   // deep blue
-      [0.95, 0.95, 1.00],   // near-white cool
-    ];
-    const arr = zone === 'warm' ? warm : (zone === 'cool' ? cool : mid);
-    const c = arr[Math.floor(Math.random() * arr.length)];
-    return [
-      Math.max(0, Math.min(1, c[0] + (Math.random() - 0.5) * jitter)),
-      Math.max(0, Math.min(1, c[1] + (Math.random() - 0.5) * jitter)),
-      Math.max(0, Math.min(1, c[2] + (Math.random() - 0.5) * jitter)),
-    ];
-  }
-
-  for (let i = 0; i < COUNT; i++) {
-    // UNIFORM distribution across the slab — no Gaussian, no ridge
-    const x = (Math.random() - 0.5) * SLAB_W;
-    const y = (Math.random() - 0.5) * SLAB_H;
-    const z = (Math.random() - 0.5) * SLAB_D;
-
-    positions[i * 3]     = x;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = z;
-
-    // Colour: based on horizontal position with palette mixing
-    const xNorm = x / (SLAB_W * 0.5);
-    const c = hueForX(xNorm, 0.10);
-    colours[i * 3]     = c[0];
-    colours[i * 3 + 1] = c[1];
-    colours[i * 3 + 2] = c[2];
-
-    // SIZE: most particles tiny pinpricks; a small minority slightly larger
-    // so the field has visible texture grain without bloomy bokeh
-    const r = Math.random();
-    if (r < 0.02) {
-      sizes[i] = 0.10 + Math.random() * 0.08;     // rare bright stars
-    } else if (r < 0.15) {
-      sizes[i] = 0.04 + Math.random() * 0.03;     // slightly visible
-    } else {
-      sizes[i] = 0.012 + Math.random() * 0.025;   // pinpricks (most)
-    }
-
-    tw[i] = Math.random() * Math.PI * 2;
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geo.setAttribute('aColor',   new THREE.BufferAttribute(colours, 3));
-  geo.setAttribute('aSize',    new THREE.BufferAttribute(sizes, 1));
-  geo.setAttribute('aTwinkle', new THREE.BufferAttribute(tw, 1));
-
-  galaxyMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uPixelRatio: { value: renderer.getPixelRatio() },
-      uOpacity: { value: 0 },
-      uTime: { value: 0 },
-    },
-    vertexShader: `
-      attribute vec3 aColor;
-      attribute float aSize;
-      attribute float aTwinkle;
-      uniform float uPixelRatio;
-      uniform float uTime;
-      varying vec3 vColor;
-      varying float vTw;
-      void main() {
-        vColor = aColor;
-        // Strong twinkle so particles sparkle in place — that's the motion
-        // we want from the reference, not drift
-        vTw = 0.45 + 0.55 * sin(uTime * 2.2 + aTwinkle);
-
-        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        gl_Position = projectionMatrix * mv;
-        gl_PointSize = aSize * 380.0 * uPixelRatio / -mv.z;
-      }
-    `,
-    fragmentShader: `
-      precision highp float;
-      uniform float uOpacity;
-      varying vec3 vColor;
-      varying float vTw;
-      void main() {
-        vec2 d = gl_PointCoord - 0.5;
-        float r = dot(d, d);
-        if (r > 0.25) discard;
-        // Sharper falloff = crisper pinpricks, less bloom
-        float core = pow(1.0 - r * 4.0, 1.4);
-        gl_FragColor = vec4(vColor * (0.85 + core * 0.4), core * uOpacity * vTw);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  });
-  const cloud = new THREE.Points(geo, galaxyMat);
-  galaxyGroup.add(cloud);
-}
-
-function updateGalaxy(t, elapsed) {
-  // Visible 0-20 (opening), fades out 17-20.
-  // Then fades BACK IN during CLOSE phase (135-145) for the cosmic return.
-  const openingVisible = 1 - smoothstep(17, 20, t);
-  const closingVisible = smoothstep(135, 145, t);
-  const visible = Math.max(openingVisible, closingVisible);
-
-  if (galaxyMat) {
-    galaxyMat.uniforms.uOpacity.value = visible;
-    galaxyMat.uniforms.uTime.value = elapsed;
-  }
-  if (galaxyGroup) {
-    galaxyGroup.visible = visible > 0.001;
-    if (galaxyGroup.visible) {
-      // Almost no rotation — reference image is nearly static, just sparkles
-      galaxyGroup.rotation.y = elapsed * 0.008;
-      galaxyGroup.rotation.x = Math.sin(elapsed * 0.012) * 0.02;
-    }
-  }
-}
-
-function rebuildGlobe() {
-  // Same name as before so buildScene() rebuild path still works
-  buildGalaxy();
-}
-
-// Backwards compat — frame loop calls updateGlobe(t, elapsed)
-function updateGlobe(t, elapsed) { updateGalaxy(t, elapsed); }
-
-
-// ============================================================
-// TOWERS
-// ============================================================
-let towerA, towerB;
-let towerAAnchors = [], towerBAnchors = [];
-let totalNodes = 0;
-
-const towerMat = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime: { value: 0 },
-    uPixelRatio: { value: renderer.getPixelRatio() },
-    uReveal: { value: 0 },
-    uOpacity: { value: 1 },
-  },
-  vertexShader: `
-    attribute float aSize;
-    attribute float aOffset;
-    attribute float aBuildHeight;
-    varying vec3 vColor;
-    varying float vAlpha;
-    uniform float uTime;
-    uniform float uPixelRatio;
-    uniform float uReveal;
-    uniform float uOpacity;
-    void main() {
-      vColor = color;
-      vec3 p = position;
-      p.y += sin(uTime * 1.5 + aOffset) * 0.04;
-      p.x += sin(uTime * 0.8 + aOffset * 1.3) * 0.025;
-      p.z += cos(uTime * 1.1 + aOffset * 0.7) * 0.025;
-      float visible = step(aBuildHeight, uReveal);
-      float tipFade = smoothstep(uReveal - 0.06, uReveal, aBuildHeight);
-      vAlpha = visible * (1.0 - tipFade * 0.7) * uOpacity;
-      vec4 mv = modelViewMatrix * vec4(p, 1.0);
-      gl_Position = projectionMatrix * mv;
-      gl_PointSize = aSize * 320.0 * uPixelRatio / -mv.z;
-    }
-  `,
-  fragmentShader: `
-    precision highp float;
-    varying vec3 vColor;
-    varying float vAlpha;
-    void main() {
-      if (vAlpha < 0.01) discard;
-      vec2 d = gl_PointCoord - 0.5;
-      float r = dot(d, d);
-      if (r > 0.25) discard;
-      float falloff = 1.0 - r * 4.0;
-      gl_FragColor = vec4(vColor * (0.7 + falloff * 0.6), falloff * 0.95 * vAlpha);
-    }
-  `,
-  vertexColors: true,
-  transparent: true,
-  depthWrite: false,
-  blending: THREE.AdditiveBlending,
-});
-
-function buildTower({ x, z, width, depth, height, density, hueOffset, seed }) {
-  let s = seed | 0;
-  const rand = () => {
-    s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-  const surfacePoints = Math.floor(45000 * density);
-  const volumePoints  = Math.floor(15000 * density);
-  const dustPoints    = Math.floor(10000 * density);
-  const total = surfacePoints + volumePoints + dustPoints;
-  const positions = new Float32Array(total * 3);
-  const colors    = new Float32Array(total * 3);
-  const sizes     = new Float32Array(total);
-  const offsets   = new Float32Array(total);
-  const buildHeight = new Float32Array(total);
-  let i = 0;
-  function hsl(h, sat, l) { return new THREE.Color().setHSL(h, sat, l); }
-
-  for (let k = 0; k < surfacePoints; k++) {
-    let lx, ly, lz;
-    const face = Math.floor(rand() * 5);
-    if (face === 0) { lx = -width/2; ly = rand() * height; lz = (rand() - 0.5) * depth; }
-    else if (face === 1) { lx = width/2; ly = rand() * height; lz = (rand() - 0.5) * depth; }
-    else if (face === 2) { lx = (rand() - 0.5) * width; ly = rand() * height; lz = -depth/2; }
-    else if (face === 3) { lx = (rand() - 0.5) * width; ly = rand() * height; lz = depth/2; }
-    else { lx = (rand() - 0.5) * width; ly = height; lz = (rand() - 0.5) * depth; }
-    lx += (rand() - 0.5) * 0.45;
-    lz += (rand() - 0.5) * 0.45;
-    positions[i*3] = x + lx; positions[i*3+1] = ly; positions[i*3+2] = z + lz;
-    const t = ly / height;
-    const c = hsl((hueOffset + t * 0.85) % 1, 0.95, 0.55);
-    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
-    sizes[i] = 0.04 + rand() * 0.06;
-    offsets[i] = rand() * Math.PI * 2;
-    buildHeight[i] = t;
-    i++;
-  }
-  for (let k = 0; k < volumePoints; k++) {
-    const eb = (v) => Math.sign(v) * Math.pow(Math.abs(v), 0.7);
-    const lx = eb((rand() - 0.5) * 2) * width / 2;
-    const ly = rand() * height;
-    const lz = eb((rand() - 0.5) * 2) * depth / 2;
-    positions[i*3] = x + lx; positions[i*3+1] = ly; positions[i*3+2] = z + lz;
-    const t = ly / height;
-    const c = hsl((hueOffset + t * 0.85) % 1, 0.9, 0.5);
-    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
-    sizes[i] = 0.03 + rand() * 0.05;
-    offsets[i] = rand() * Math.PI * 2;
-    buildHeight[i] = t;
-    i++;
-  }
-  for (let k = 0; k < dustPoints; k++) {
-    const lx = (rand() - 0.5) * width * 2.4;
-    const ly = rand() * height * 1.18;
-    const lz = (rand() - 0.5) * depth * 2.4;
-    positions[i*3] = x + lx; positions[i*3+1] = ly; positions[i*3+2] = z + lz;
-    const t = Math.max(0, Math.min(1, ly / height));
-    const c = hsl((hueOffset + t * 0.85) % 1, 0.7, 0.55);
-    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
-    sizes[i] = 0.025 + rand() * 0.04;
-    offsets[i] = rand() * Math.PI * 2;
-    buildHeight[i] = t;
-    i++;
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-  geo.setAttribute('aOffset', new THREE.BufferAttribute(offsets, 1));
-  geo.setAttribute('aBuildHeight', new THREE.BufferAttribute(buildHeight, 1));
-  const anchors = [];
-  for (let k = 0; k < 60; k++) {
-    const idx = Math.floor(rand() * surfacePoints) * 3;
-    anchors.push(new THREE.Vector3(positions[idx], positions[idx+1], positions[idx+2]));
-  }
-  return { geometry: geo, count: total, anchors };
-}
-
-function updateTowers(t) {
-  const reveal = smoothstep(36, 48, t);
-  towerMat.uniforms.uReveal.value = Math.max(reveal, 0.0001);
-  // Towers fade slightly in later phases so the strands/density read,
-  // and fully out during CLOSE
-  const lateFade = 1 - smoothstep(82, 92, t) * 0.3 - smoothstep(102, 112, t) * 0.3;
-  const closeFade = 1 - smoothstep(132, 142, t);
-  towerMat.uniforms.uOpacity.value = Math.max(0, lateFade * closeFade);
-}
-
-// ============================================================
-// NETWORK
-// ============================================================
-class Connections {
-  constructor(maxLinks, segments) {
-    this.maxLinks = maxLinks; this.segments = segments;
-    this.links = [];
-    const maxVerts = maxLinks * segments * 2;
-    this.positions = new Float32Array(maxVerts * 3);
-    this.colors = new Float32Array(maxVerts * 3);
-    this.geo = new THREE.BufferGeometry();
-    this.geo.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
-    this.geo.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
-    this.geo.setDrawRange(0, 0);
-    this.material = new THREE.LineBasicMaterial({
-      vertexColors: true, transparent: true, opacity: 0,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    });
-    this.mesh = new THREE.LineSegments(this.geo, this.material);
-  }
-  spawn(from, to, color) {
-    if (this.links.length >= this.maxLinks) return;
-    const mid = from.clone().lerp(to, 0.5);
-    const dist = from.distanceTo(to);
-    mid.y += dist * 0.3 + Math.random() * 2;
-    mid.x += (Math.random() - 0.5) * 4;
-    mid.z += (Math.random() - 0.5) * 4;
-    this.links.push({ from: from.clone(), to: to.clone(), mid, color: color.clone(),
-      progress: 0, decay: 0,
-      speed: 0.012 + Math.random() * 0.018,
-      decaySpeed: 0.005 + Math.random() * 0.006 });
-  }
-  update() {
-    for (let i = this.links.length - 1; i >= 0; i--) {
-      const l = this.links[i];
-      if (l.progress < 1) l.progress = Math.min(1, l.progress + l.speed);
-      else { l.decay += l.decaySpeed; if (l.decay >= 1) { this.links.splice(i, 1); continue; } }
-    }
-    let v = 0;
-    const tmp = new THREE.Vector3();
-    for (const l of this.links) {
-      const tipT = l.progress;
-      const alpha = (l.progress < 1 ? Math.pow(l.progress, 0.6) : 1.0) * (1 - l.decay);
-      let prev = null;
-      for (let k = 0; k <= this.segments; k++) {
-        const t = (k / this.segments) * tipT;
-        const u = 1 - t;
-        tmp.set(
-          u*u*l.from.x + 2*u*t*l.mid.x + t*t*l.to.x,
-          u*u*l.from.y + 2*u*t*l.mid.y + t*t*l.to.y,
-          u*u*l.from.z + 2*u*t*l.mid.z + t*t*l.to.z
-        );
-        if (prev) {
-          this.positions[v*3] = prev.x; this.positions[v*3+1] = prev.y; this.positions[v*3+2] = prev.z;
-          this.colors[v*3] = l.color.r * alpha; this.colors[v*3+1] = l.color.g * alpha; this.colors[v*3+2] = l.color.b * alpha;
-          v++;
-          this.positions[v*3] = tmp.x; this.positions[v*3+1] = tmp.y; this.positions[v*3+2] = tmp.z;
-          this.colors[v*3] = l.color.r * alpha; this.colors[v*3+1] = l.color.g * alpha; this.colors[v*3+2] = l.color.b * alpha;
-          v++;
-        }
-        if (!prev) prev = new THREE.Vector3();
-        prev.copy(tmp);
-      }
-    }
-    this.geo.setDrawRange(0, v);
-    this.geo.attributes.position.needsUpdate = true;
-    this.geo.attributes.color.needsUpdate = true;
-  }
-}
-const connections = new Connections(60, 24);
-let nextSpawnTime = 54;
-
-function updateNetwork(t) {
-  // Connections active during phase 3 onward, fade gradually after phase 5,
-  // and fully out during CLOSE
-  const intensity = smoothstep(54, 62, t) * (1 - smoothstep(102, 122, t) * 0.7);
-  const closeFade = 1 - smoothstep(132, 142, t);
-  connections.material.opacity = Math.max(0, (0.5 + intensity * 0.4) * closeFade);
-
-  const spawnInterval = 0.5 - intensity * 0.4;
-  if (t >= nextSpawnTime && intensity > 0.05 && towerAAnchors.length > 0 && towerBAnchors.length > 0) {
-    const r = Math.random();
-    let from, to, color;
-    if (r < 0.6) {
-      from = towerAAnchors[Math.floor(Math.random() * towerAAnchors.length)];
-      to   = towerBAnchors[Math.floor(Math.random() * towerBAnchors.length)];
-      color = new THREE.Color().setHSL(0.85 + Math.random() * 0.15, 0.9, 0.65);
-    } else {
-      if (Math.random() < 0.5) {
-        from = towerAAnchors[Math.floor(Math.random() * towerAAnchors.length)];
-        color = new THREE.Color().setHSL(0.95, 0.9, 0.65);
-      } else {
-        from = towerBAnchors[Math.floor(Math.random() * towerBAnchors.length)];
-        color = new THREE.Color().setHSL(0.55, 0.9, 0.65);
-      }
-      to = vascularCentre.clone();
-      to.y += (Math.random() - 0.5) * 4;
-      to.x += (Math.random() - 0.5) * 3;
-      to.z += (Math.random() - 0.5) * 3;
-    }
-    connections.spawn(from, to, color);
-    nextSpawnTime = t + spawnInterval;
-  }
-  connections.update();
-}
-
-// ============================================================
-// VASCULAR BLOOM
-// ============================================================
-const vascularCentre = new THREE.Vector3(0.5, 12, -1);
-
-function hash3(x, y, z) {
-  let h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
-  return (h - Math.floor(h)) * 2 - 1;
-}
-function noise3(x, y, z) {
-  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
-  const xf = x - xi, yf = y - yi, zf = z - zi;
-  const u = xf*xf*(3-2*xf), v = yf*yf*(3-2*yf), w = zf*zf*(3-2*zf);
-  function corner(dx, dy, dz) { return hash3(xi+dx, yi+dy, zi+dz); }
-  const c000 = corner(0,0,0), c100 = corner(1,0,0);
-  const c010 = corner(0,1,0), c110 = corner(1,1,0);
-  const c001 = corner(0,0,1), c101 = corner(1,0,1);
-  const c011 = corner(0,1,1), c111 = corner(1,1,1);
-  const x00 = c000*(1-u) + c100*u;
-  const x10 = c010*(1-u) + c110*u;
-  const x01 = c001*(1-u) + c101*u;
-  const x11 = c011*(1-u) + c111*u;
-  return (x00*(1-v) + x10*v)*(1-w) + (x01*(1-v) + x11*v)*w;
-}
-function curl3(x, y, z) {
-  const e = 0.1;
-  const nx1 = noise3(x, y + e, z) - noise3(x, y - e, z);
-  const nx2 = noise3(x, y, z + e) - noise3(x, y, z - e);
-  const ny1 = noise3(x, y, z + e) - noise3(x, y, z - e);
-  const ny2 = noise3(x + e, y, z) - noise3(x - e, y, z);
-  const nz1 = noise3(x + e, y, z) - noise3(x - e, y, z);
-  const nz2 = noise3(x, y + e, z) - noise3(x, y - e, z);
-  return [(nx1 - nx2) / (2 * e), (ny1 - ny2) / (2 * e), (nz1 - nz2) / (2 * e)];
-}
-
-let vascularMesh, vascularMat;
-
-function buildVascular(seed) {
-  const allStrands = [];
-  const clusterCount = 12;
-  const hues = [0.0, 0.06, 0.13, 0.22, 0.35, 0.48, 0.55, 0.62, 0.7, 0.78, 0.86, 0.93];
-  let s = seed | 0;
-  const rand = () => {
-    s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-  const phi = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < clusterCount; i++) {
-    const y = 1 - (i / (clusterCount - 1)) * 2;
-    const radius = Math.sqrt(1 - y * y);
-    const theta = phi * i;
-    let dx = Math.cos(theta) * radius, dy = y, dz = Math.sin(theta) * radius;
-    const rotY = rand() * Math.PI * 2;
-    const cy = Math.cos(rotY), sy = Math.sin(rotY);
-    const ndx = dx * cy - dz * sy, ndz = dx * sy + dz * cy;
-    dx = ndx; dz = ndz;
-    const baseHue = hues[i % hues.length];
-    const strandCount = 26 + Math.floor(rand() * 14);
-    for (let str = 0; str < strandCount; str++) {
-      const strand = [];
-      const startJitter = 0.3;
-      const pos = [
-        vascularCentre.x + dx * 0.5 + (rand() - 0.5) * startJitter,
-        vascularCentre.y + dy * 0.5 + (rand() - 0.5) * startJitter,
-        vascularCentre.z + dz * 0.5 + (rand() - 0.5) * startJitter,
-      ];
-      const cone = 0.4;
-      const ddir = [dx + (rand() - 0.5) * cone, dy + (rand() - 0.5) * cone, dz + (rand() - 0.5) * cone];
-      const dn = Math.hypot(ddir[0], ddir[1], ddir[2]) || 1;
-      ddir[0] /= dn; ddir[1] /= dn; ddir[2] /= dn;
-      let vx = ddir[0] * 0.03, vy = ddir[1] * 0.03, vz = ddir[2] * 0.03;
-      const segments = Math.floor(60 + rand() * 140);
-      const hue = (baseHue + (rand() - 0.5) * 0.04 + 1) % 1;
-      const col = new THREE.Color().setHSL(hue, 0.9 + rand() * 0.1, 0.5 + rand() * 0.2);
-      const stepSize = 0.06 + rand() * 0.07;
-      const curlScale = 0.4, curlStrength = 0.04, dirStrength = 0.018;
-      for (let k = 0; k < segments; k++) {
-        strand.push({
-          x: pos[0], y: pos[1], z: pos[2],
-          alpha: Math.min(1, k / 5) * (1 - Math.pow(k / segments, 1.6)),
-          color: col,
-        });
-        const c = curl3(pos[0] * curlScale, pos[1] * curlScale, pos[2] * curlScale);
-        vx += c[0] * curlStrength + ddir[0] * dirStrength;
-        vy += c[1] * curlStrength + ddir[1] * dirStrength;
-        vz += c[2] * curlStrength + ddir[2] * dirStrength;
-        vx *= 0.92; vy *= 0.92; vz *= 0.92;
-        const vn = Math.hypot(vx, vy, vz) || 1;
-        vx = (vx / vn) * stepSize; vy = (vy / vn) * stepSize; vz = (vz / vn) * stepSize;
-        pos[0] += vx; pos[1] += vy; pos[2] += vz;
-      }
-      if (strand.length > 1) allStrands.push(strand);
-    }
-  }
-  return allStrands;
-}
-
-function buildVascularMesh(strands) {
-  let segCount = 0;
-  for (const s of strands) segCount += Math.max(0, s.length - 1);
-  const positions = new Float32Array(segCount * 2 * 3);
-  const rgb = new Float32Array(segCount * 2 * 3);
-  const alpha = new Float32Array(segCount * 2);
-  const along = new Float32Array(segCount * 2);
-  const strandPhase = new Float32Array(segCount * 2);
-  let v = 0;
-  for (const s of strands) {
-    const phase = Math.random() * 0.7;
-    for (let i = 0; i < s.length - 1; i++) {
-      const a = s[i], b = s[i + 1];
-      positions[v*3] = a.x; positions[v*3+1] = a.y; positions[v*3+2] = a.z;
-      rgb[v*3] = a.color.r; rgb[v*3+1] = a.color.g; rgb[v*3+2] = a.color.b;
-      alpha[v] = a.alpha; along[v] = i / (s.length - 1); strandPhase[v] = phase;
-      v++;
-      positions[v*3] = b.x; positions[v*3+1] = b.y; positions[v*3+2] = b.z;
-      rgb[v*3] = b.color.r; rgb[v*3+1] = b.color.g; rgb[v*3+2] = b.color.b;
-      alpha[v] = b.alpha; along[v] = (i + 1) / (s.length - 1); strandPhase[v] = phase;
-      v++;
-    }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geo.setAttribute('aColor', new THREE.BufferAttribute(rgb, 3));
-  geo.setAttribute('aAlpha', new THREE.BufferAttribute(alpha, 1));
-  geo.setAttribute('aAlong', new THREE.BufferAttribute(along, 1));
-  geo.setAttribute('aStrandPhase', new THREE.BufferAttribute(strandPhase, 1));
-  return geo;
-}
-
-vascularMat = new THREE.ShaderMaterial({
-  uniforms: { uTime: { value: 0 }, uGrowth: { value: 0 }, uOpacity: { value: 1 } },
-  vertexShader: `
-    attribute vec3 aColor;
-    attribute float aAlpha;
-    attribute float aAlong;
-    attribute float aStrandPhase;
-    varying vec3 vColor;
-    varying float vAlpha;
-    uniform float uTime;
-    uniform float uGrowth;
-    uniform float uOpacity;
-    void main() {
-      vColor = aColor;
-      float strandGrowth = clamp((uGrowth - aStrandPhase) / (1.0 - aStrandPhase + 0.001), 0.0, 1.0);
-      float visible = step(aAlong, strandGrowth);
-      float tipFade = smoothstep(strandGrowth - 0.04, strandGrowth, aAlong);
-      vAlpha = aAlpha * visible * (1.0 - tipFade * 0.7) * uOpacity;
-      vec3 p = position;
-      float breath = sin(uTime * 0.8 + aStrandPhase * 6.28) * 0.015;
-      p += normalize(position - vec3(${vascularCentre.x.toFixed(3)}, ${vascularCentre.y.toFixed(3)}, ${vascularCentre.z.toFixed(3)}) + vec3(0.001)) * breath;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-    }
-  `,
-  fragmentShader: `
-    precision highp float;
-    varying vec3 vColor;
-    varying float vAlpha;
-    void main() {
-      if (vAlpha < 0.01) discard;
-      gl_FragColor = vec4(vColor, vAlpha * 0.9);
-    }
-  `,
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-});
-
-function updateVascular(t) {
-  const g = smoothstep(72, 92, t);
-  vascularMat.uniforms.uGrowth.value = g;
-  // Vascular fades a bit when strands take over, then fully during CLOSE
-  const strandsFade = 1 - smoothstep(102, 112, t) * 0.4;
-  const closeFade = 1 - smoothstep(132, 142, t);
-  vascularMat.uniforms.uOpacity.value = strandsFade * closeFade;
-}
-
-// ============================================================
-// Build the scene
-// ============================================================
-let currentSeed;
-function buildScene(seed) {
-  currentSeed = seed;
-  if (seedVal) seedVal.textContent = seed.toString().padStart(5, '0');
-
-  if (cityGroup) scene.remove(cityGroup);
-  if (towerA) { scene.remove(towerA); towerA.geometry.dispose(); }
-  if (towerB) { scene.remove(towerB); towerB.geometry.dispose(); }
-  if (vascularMesh) { scene.remove(vascularMesh); vascularMesh.geometry.dispose(); }
-
-  cityGroup = buildCity(seed);
-  scene.add(cityGroup);
-
-  const aData = buildTower({ x: -7, z: 0, width: 7, depth: 6, height: 14, density: 1.0, hueOffset: 0.95, seed: seed + 17 });
-  towerA = new THREE.Points(aData.geometry, towerMat);
-  towerAAnchors = aData.anchors;
-  scene.add(towerA);
-
-  const bData = buildTower({ x: 8, z: -2, width: 5, depth: 5, height: 22, density: 1.1, hueOffset: 0.5, seed: seed + 89 });
-  towerB = new THREE.Points(bData.geometry, towerMat);
-  towerBAnchors = bData.anchors;
-  scene.add(towerB);
-
-  const strands = buildVascular(seed + 137);
-  const geo = buildVascularMesh(strands);
-  vascularMesh = new THREE.LineSegments(geo, vascularMat);
-  scene.add(vascularMesh);
-
-  totalNodes = aData.count + bData.count;
-  let strandNodes = 0;
-  for (const s of strands) strandNodes += s.length;
-  totalNodes += strandNodes;
-
-  if (!connections.added) { scene.add(connections.mesh); connections.added = true; }
-  connections.links.length = 0;
-  nextSpawnTime = 54;
-
-  // Rebuild canvas layers too
-  if (window._strandsRebuild) window._strandsRebuild();
-  if (window._densityRebuild) window._densityRebuild();
-  if (typeof rebuildGlobe === 'function') rebuildGlobe();
-
-  // Reset phase tracker on subsequent rebuilds (loop / regenerate)
-  // — but NOT on the very first build, since we set phase 0 already at module load
-  if (typeof phaseHeadlineEl !== 'undefined' && phaseHeadlineEl && masterTime > 0) {
-    lastShownPhase = -1;
-    phaseHeadlineEl.classList.remove('show');
-  }
-
-  masterTime = 0;
-}
-
-// ============================================================
-// Camera
-// ============================================================
-function updateCamera(t) {
-  // Phase 0 (GENESIS): camera tight on the globe at y=12.
-  // Phase 1+ (CITY onward): existing wide orbit choreography.
-  // Smoothly blend between the two over 8-12s.
-
-  // === Genesis camera params ===
-  const orbitSlow = t * 0.04;          // very slow orbit — reference image feels static-ish
-  const genTheta = orbitSlow + mouse.x * 0.18;
-  const genPhi = 0.05 + mouse.y * 0.08;
-  const genRadius = 32;                 // close enough that the dense mat fills frame
-  const genCamPos = new THREE.Vector3(
-    Math.cos(genTheta) * Math.cos(genPhi) * genRadius,
-    GALAXY_CENTRE.y + Math.sin(genPhi) * genRadius * 0.4,
-    Math.sin(genTheta) * Math.cos(genPhi) * genRadius
-  );
-  const genLookAt = GALAXY_CENTRE.clone();
-
-  // === City+ camera params ===
-  const orbit = t * 0.06;
-  const earlyR = 42, lateR = 32;
-  const radiusBlend = smoothstep(20, 92, t);
-  const radius = earlyR + (lateR - earlyR) * radiusBlend;
-  const earlyPhi = 0.55, latePhi = 0.42;
-  const phi = earlyPhi + (latePhi - earlyPhi) * radiusBlend;
-  const theta = orbit + mouse.x * 0.4;
-  const phiM = phi + mouse.y * 0.18;
-  const cityCamPos = new THREE.Vector3(
-    Math.cos(theta) * Math.cos(phiM) * radius,
-    8 + Math.sin(phiM) * radius * 0.4,
-    Math.sin(theta) * Math.cos(phiM) * radius
-  );
-  const cityLookY = 8 + smoothstep(70, 92, t) * 4;
-  const cityLookAt = new THREE.Vector3(0, cityLookY, 0);
-
-  // Blend genesis → city over 17–22s (galaxy fades 17–20, city emerges 20–30)
-  const blend = smoothstep(17, 22, t);
-  // CLOSE: blend back from city to genesis camera over 138–150s
-  const returnBlend = smoothstep(138, 150, t);
-
-  // Position: city → start, then back toward genesis pos at end
-  const liveCamPos = new THREE.Vector3().lerpVectors(genCamPos, cityCamPos, blend);
-  const finalCamPos = new THREE.Vector3().lerpVectors(liveCamPos, genCamPos, returnBlend);
-
-  const liveLookAt = new THREE.Vector3().lerpVectors(genLookAt, cityLookAt, blend);
-  const finalLookAt = new THREE.Vector3().lerpVectors(liveLookAt, genLookAt, returnBlend);
-
-  camera.position.copy(finalCamPos);
-  camera.lookAt(finalLookAt);
-}
-
-// ============================================================
-// Phase indicator + phase-changing big text
-// ============================================================
-const PHASE_TEXT = [
-  { // 0 GENESIS — your tagline opens the show on the white canvas
-    kicker: 'Aleatoric Lab · Principled probabilistic ML',
-    headline: 'Let me show you where prediction <em>ends</em> and understanding <em>begins</em>.',
-    sub: 'Building probabilistic systems for the problems where overconfidence has real consequences.',
-  },
-  { // 1 CITY
-    kicker: '§ 02 · Foundations',
-    headline: 'Structure in places that <em>resist</em> it.',
-    sub: 'Mathematics that does not respect disciplinary boundaries. Hospitals, supply chains, finance, social systems, all the same substrate.',
-  },
-  { // 2 TOWERS
-    kicker: '§ 03 · Scale',
-    headline: 'Two domains. One <em>probabilistic</em> substrate.',
-    sub: 'A model that knows its own limits is not a weaker model. In high-stakes environments that distinction is everything.',
-  },
-  { // 3 NETWORK
-    kicker: '§ 04 · Transfer',
-    headline: 'A model that knows its <em>own limits</em>.',
-    sub: 'Multi-agent systems sharing the same core challenge. The mathematics does not care about the domain.',
-  },
-  { // 4 BLOOM
-    kicker: '§ 05 · Aleatoric',
-    headline: 'The roll of a die. <em>Irreducible.</em>',
-    sub: 'From the Latin alea, the randomness that lives inside every complex system regardless of how much data you collect.',
-  },
-  { // 5 STRANDS
-    kicker: '§ 06 · Inference',
-    headline: 'Bayesian systems for <em>high-stakes</em> environments.',
-    sub: 'Where being honest about uncertainty is not a methodological nicety but an operational necessity.',
-  },
-  { // 6 DENSITY
-    kicker: '§ 07 · Now',
-    headline: 'Aleatoric Lab. <em>Founded</em> March 2026.',
-    sub: 'Currently live. New work follows. rameezis@aleatoriclab.com',
-  },
-  { // 7 CLOSE — return to cosmos
-    kicker: '§ 08 · Continuing',
-    headline: 'More to <em>follow</em>.',
-    sub: 'Stay tuned. New research, papers, and collaborations announced through 2026.',
-  },
-];
-
-const segs = phaseBar ? phaseBar.querySelectorAll('.seg') : [];
-const phaseHeadlineEl = document.getElementById('phaseHeadline');
-const phKicker = document.getElementById('phKicker');
-const phHeadline = document.getElementById('phHeadline');
-const phSub = document.getElementById('phSub');
-
-let lastShownPhase = -1;
-let textSwapTimer = null;
-
-function setPhaseText(idx) {
-  const t = PHASE_TEXT[idx];
-  if (!t) return;
-  if (phKicker) phKicker.innerHTML = t.kicker;
-  phHeadline.innerHTML = t.headline;
-  phSub.innerHTML = t.sub;
-}
-
-function updatePhaseUI(t) {
-  let active = -1;
-  for (let i = 0; i < PHASES.length; i++) {
-    if (t >= PHASES[i].start && t < PHASES[i].end) { active = i; break; }
-  }
-  if (active === -1) active = PHASES.length - 1;
-  if (segs.length) segs.forEach((s, i) => s.classList.toggle('active', i <= active));
-  if (phaseLabel) phaseLabel.textContent = PHASES[active].name;
-  if (nodeCountEl) nodeCountEl.textContent = totalNodes.toLocaleString();
-
-  // Crossfade big headline when phase changes
-  if (active !== lastShownPhase) {
-    lastShownPhase = active;
-    // Fade out current
-    phaseHeadlineEl.classList.remove('show');
-    if (textSwapTimer) clearTimeout(textSwapTimer);
-    // After fade-out completes, swap content + fade back in
-    textSwapTimer = setTimeout(() => {
-      setPhaseText(active);
-      requestAnimationFrame(() => {
-        phaseHeadlineEl.classList.add('show');
-      });
-    }, 700); // matches kicker transition (~0.7s)
-  }
-}
-
-// Show first phase text immediately on load (don't wait for phase-change trigger)
-setPhaseText(0);
-requestAnimationFrame(() => {
-  phaseHeadlineEl.classList.add('show');
-  lastShownPhase = 0;
-});
-
-// ============================================================
-// Nav UI — progress dots + prev/next arrows (top centre)
-// Lets users skip directly to any phase instead of waiting for the
-// 155-second linear timeline.
-// ============================================================
-const navDotsEl = document.getElementById('navDots');
-const navPrevEl = document.getElementById('navPrev');
-const navNextEl = document.getElementById('navNext');
-
-// Build dots from PHASES — one per phase
-const dotEls = [];
-PHASES.forEach((phase, i) => {
-  const d = document.createElement('button');
-  d.className = 'nav-dot';
-  d.setAttribute('aria-label', `Jump to ${phase.name}`);
-  d.title = phase.name;
-  d.addEventListener('click', () => jumpToPhase(i));
-  navDotsEl.appendChild(d);
-  dotEls.push(d);
-});
-
-function jumpToPhase(idx) {
-  if (idx < 0 || idx >= PHASES.length) return;
-  // Hide replay UI if visible (in case user is on close screen)
-  if (replayUIShown) {
-    replayUIEl.classList.remove('show');
-    replayUIShown = false;
-  }
-  // Move masterTime to the start of the target phase + a small offset
-  // (offset ensures we're inside the phase's text-display zone)
-  const target = PHASES[idx].start + 0.1;
-  masterTime = target;
-  // Force phase-text re-evaluation on next frame
-  // (don't reset lastShownPhase = -1 directly because that would re-fade
-  // the text even if we're already on this phase; updatePhaseUI handles it)
-}
-
-function getCurrentPhaseIndex(t) {
-  for (let i = 0; i < PHASES.length; i++) {
-    if (t >= PHASES[i].start && t < PHASES[i].end) return i;
-  }
-  return PHASES.length - 1;
-}
-
-function updateNavUI(t) {
-  const active = getCurrentPhaseIndex(t);
-  dotEls.forEach((dot, i) => {
-    dot.classList.toggle('active', i === active);
-    dot.classList.toggle('passed', i < active);
-  });
-  // Disable prev/next at edges
-  if (navPrevEl) navPrevEl.disabled = active === 0;
-  if (navNextEl) navNextEl.disabled = active === PHASES.length - 1;
-}
-
-if (navPrevEl) {
-  navPrevEl.addEventListener('click', () => {
-    const cur = getCurrentPhaseIndex(masterTime);
-    jumpToPhase(cur - 1);
-  });
-}
-if (navNextEl) {
-  navNextEl.addEventListener('click', () => {
-    const cur = getCurrentPhaseIndex(masterTime);
-    jumpToPhase(cur + 1);
-  });
-}
-
-// Keyboard shortcuts: ← → for prev/next
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft' && navPrevEl && !navPrevEl.disabled) {
-    navPrevEl.click();
-  } else if (e.key === 'ArrowRight' && navNextEl && !navNextEl.disabled) {
-    navNextEl.click();
-  }
-});
-
-// ============================================================
-// Replay UI — fades in late in CLOSE phase
-// ============================================================
-const replayUIEl = document.getElementById('replayUI');
-
-let replayUIShown = false;
-
-function updateReplayUI(t) {
-  // Show "Get in touch" button when we're 145s+ into the timeline (deep in CLOSE)
-  const wantShow = t >= 145;
-  if (wantShow !== replayUIShown) {
-    replayUIShown = wantShow;
-    replayUIEl.classList.toggle('show', wantShow);
-  }
-}
-
-function restartScene() {
-  // Hide replay UI immediately
-  replayUIEl.classList.remove('show');
-  replayUIShown = false;
-  // Reset phase text tracker so phase 0 text re-shows
-  lastShownPhase = -1;
-  if (phaseHeadlineEl) phaseHeadlineEl.classList.remove('show');
-  // Rebuild with same seed (rebuild zeroes masterTime internally)
-  buildScene(currentSeed);
-  // After rebuild, re-show phase 0 text
-  setPhaseText(0);
-  requestAnimationFrame(() => {
-    if (phaseHeadlineEl) phaseHeadlineEl.classList.add('show');
-    lastShownPhase = 0;
-  });
-}
-
-// Note: replay button was removed per feedback — only Get in touch remains.
-// The contact button is a plain mailto link with no JS needed.
-
-// ============================================================
-// Mouse / interaction
-// ============================================================
-let mouse = { x: 0, y: 0 };
-let mouseTarget = { x: 0, y: 0 };
-window.addEventListener('mousemove', (e) => {
-  mouseTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouseTarget.y = (e.clientY / window.innerHeight) * 2 - 1;
-});
-window.addEventListener('touchmove', (e) => {
-  if (!e.touches.length) return;
-  mouseTarget.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
-  mouseTarget.y = (e.touches[0].clientY / window.innerHeight) * 2 - 1;
-}, { passive: true });
-
-let paused = false;
-if (pauseBtn) {
-  pauseBtn.addEventListener('click', () => {
-    paused = !paused;
-    pauseBtn.textContent = paused ? 'Play' : 'Pause';
-  });
-}
-if (regenBtn) {
-  regenBtn.addEventListener('click', () => buildScene(Math.floor(Math.random() * 99999)));
-}
-
-// ============================================================
-// Resize
-// ============================================================
-function resize() {
-  renderer.setSize(window.innerWidth, window.innerHeight, false);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  towerMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
-}
-window.addEventListener('resize', resize);
-resize();
-
-// ============================================================
-// Strand & density layer fades — controlled from master timeline
-// ============================================================
-function updateOverlayLayers(t) {
-  // STRANDS layer: ramp in 92-102, hold, fade out during CLOSE 132-142
-  const strandsIn = smoothstep(92, 102, t);
-  const strandsOut = smoothstep(132, 142, t);
-  if (window._strandsFade) window._strandsFade(Math.max(0, strandsIn - strandsOut));
-
-  // DENSITY backdrop: ramp in 112-122, fade out during CLOSE 132-142
-  const densityIn = smoothstep(112, 122, t);
-  const densityOut = smoothstep(132, 142, t);
-  if (window._densityFade) window._densityFade(Math.max(0, densityIn - densityOut));
-}
-
-// ============================================================
-// Main loop
-// ============================================================
-let masterTime = 0;
-const clock = new THREE.Clock();
-
-// Pause cinematic rendering when hero section is fully scrolled out of view.
-// Saves significant CPU/GPU when the user is reading the content below.
-let heroVisible = true;
-const heroEl = document.querySelector('.hero');
-if (heroEl && 'IntersectionObserver' in window) {
-  const heroObserver = new IntersectionObserver((entries) => {
-    heroVisible = entries[0].isIntersecting;
-  }, { threshold: 0.01 });
-  heroObserver.observe(heroEl);
-}
-
-function frame() {
-  const dt = clock.getDelta();
-  if (!paused) masterTime += dt;
-  if (masterTime > LOOP_DURATION) {
-    if (HOLD_AT_END) {
-      // Pause at the end — replay UI already visible — wait for user input
-      masterTime = LOOP_DURATION;
-    } else {
-      masterTime = 0;
-      buildScene(Math.floor(Math.random() * 99999));
-    }
-  }
-  const t = masterTime;
-
-  // If hero is scrolled out of view, skip the heavy render but keep rAF going
-  // so we resume cleanly when user scrolls back up.
-  if (!heroVisible) {
-    requestAnimationFrame(frame);
-    return;
-  }
-
-  towerMat.uniforms.uTime.value = clock.elapsedTime;
-  vascularMat.uniforms.uTime.value = clock.elapsedTime;
-
-  mouse.x += (mouseTarget.x - mouse.x) * 0.04;
-  mouse.y += (mouseTarget.y - mouse.y) * 0.04;
-
-  updateCity(t);
-  updateGlobe(t, clock.elapsedTime);
-  updateTowers(t);
-  updateNetwork(t);
-  updateVascular(t);
-  updateCamera(t);
-  updateOverlayLayers(t);
-  updatePhaseUI(t);
-  updateNavUI(t);
-  updateReplayUI(t);
-
-  if (vascularMesh) {
-    vascularMesh.rotation.y = clock.elapsedTime * 0.04;
-    vascularMesh.rotation.x = Math.sin(clock.elapsedTime * 0.03) * 0.08;
-  }
-
-  renderer.render(scene, camera);
-  requestAnimationFrame(frame);
-}
-
-buildScene(Math.floor(Math.random() * 99999));
-frame();
-
-setTimeout(() => {
-  const l = document.getElementById('loader');
-  l.classList.add('hidden');
-  setTimeout(() => l.remove(), 900);
-}, 1400);
-</script>
-
+<style>
+.intro-on.intro-reveal header .brand span,.intro-on.intro-reveal nav,.intro-on.intro-reveal main,.intro-on.intro-reveal footer{opacity:1}
+.intro-on.intro-reveal header{border-bottom-color:var(--line)}
+</style>
 </body>
 </html>
